@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import projectRoutes from './routes/projects';
 import folderRoutes from './routes/folders';
 import devlogRoutes from './routes/devlog';
+import tweetRoutes from './routes/tweets';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/projects', projectRoutes);
 app.use('/api/folders', folderRoutes);
 app.use('/api/devlog', devlogRoutes);
+app.use('/api/tweets', tweetRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

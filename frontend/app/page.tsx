@@ -27,7 +27,7 @@ export default async function HomePage() {
       {/* Header with cover image */}
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="relative overflow-hidden rounded-lg mt-8">
-          <div className="absolute inset-0 bg-[url('/landing-cover.jpg')] bg-cover" style={{ backgroundPosition: 'center 38%' }}></div>
+          <div className="absolute inset-0 bg-[url('/landing-cover.jpg')] bg-cover" style={{ backgroundPosition: 'center 50%' }}></div>
           <div className="relative z-10 py-8 px-6 bg-black/30">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-500">
@@ -53,7 +53,7 @@ export default async function HomePage() {
         <section className="mb-12">
           <h2 className="text-lg font-bold mb-3 uppercase tracking-wide">WHOAMI</h2>
           <p className="text-muted-foreground leading-relaxed">
-            hi. i'm maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
+            hi. im maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
             devlog where i document progress, thoughts, and learnings from various projects. each entry includes
             timestamps and personal reflections on the development process.
           </p>

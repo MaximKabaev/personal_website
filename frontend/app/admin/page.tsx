@@ -444,6 +444,12 @@ export default function AdminPage() {
           >
             Devlog
           </button>
+          <Link
+            href="/admin/tweets"
+            className="pb-2 px-1 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Tweets →
+          </Link>
         </div>
 
         {/* Folders Tab */}
