@@ -25,11 +25,17 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-mono">
+    <div
+      className="min-h-screen bg-background text-foreground font-mono"
+      style={{ ['--bg-pos' as string]: 'center 50%' }}
+    >
       {/* Header with cover image */}
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="relative overflow-hidden rounded-lg mt-8">
-          <div className="absolute inset-0 bg-[url('/landing-cover.jpg')] bg-cover" style={{ backgroundPosition: 'center 50%' }}></div>
+          <div
+            className="absolute inset-0 bg-cover bg-[url('/landing-cover.jpg')] dark:bg-[url('/landing-cover-dark.jpg')] dark:[--bg-pos:center_22%]"
+            style={{ backgroundPosition: 'var(--bg-pos)' }}
+          ></div>
           <div className="relative z-10 py-8 px-6 bg-black/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -53,9 +59,9 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-12 max-w-4xl">
+      <div className="container mx-auto px-6 py-10 max-w-4xl">
         {/* About Section */}
-        <section className="mb-12">
+        <section className="mb-6">
           <h2 className="text-lg font-bold mb-3 uppercase tracking-wide">WHOAMI</h2>
           <p className="text-muted-foreground leading-relaxed">
             hi. im maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
@@ -65,7 +71,7 @@ export default async function HomePage() {
         </section>
 
         {/* Projects Section */}
-        <section className="mb-12">
+        <section className="mb-6">
           <h2 className="text-lg font-bold mb-3 uppercase tracking-wide">DEVLOG</h2>
           <div className="font-mono text-sm">
             <div className="text-muted-foreground mb-2">/usr/maxim</div>
@@ -142,7 +148,7 @@ export default async function HomePage() {
         </section>
 
         {/* Recent Entries */}
-        <section className="mb-12">
+        <section className="mb-6">
           <h2 className="text-lg font-bold mb-3 uppercase tracking-wide">RECENT ENTRIES</h2>
           <div className="space-y-4">
             {recentEntries.length > 0 ? (
