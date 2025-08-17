@@ -72,10 +72,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
                 {isDev !== null && (
                   <button
                     onClick={resetPreference}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-xs text-white hover:text-slate-200 transition-colors"
                     title={isDev ? "Switch to normal view" : "Switch to terminal view"}
                   >
-                    [{isDev ? "exit" : "terminal"}]
+                    [exit]
                   </button>
                 )}
               </div>

@@ -70,11 +70,11 @@ export default function DevPrompt({ onSelection }: Props) {
             onMouseEnter={() => setSelectedOption("yes")}
             className={`block w-full text-left px-3 py-2 rounded text-sm transition-all ${
               selectedOption === "yes"
-                ? "bg-blue-600/20 border border-blue-500 text-blue-300"
+                ? "bg-blue-600/20 border border-blue-500 text-blue-500 dark:text-blue-300"
                 : "bg-muted/10 border border-muted hover:bg-muted/20"
             }`}
           >
-            <span className="text-blue-400 mr-2">›</span>
+            <span className="text-blue-500 dark:text-blue-400 mr-2">›</span>
             Yes, I speak terminal
           </button>
           
@@ -83,11 +83,11 @@ export default function DevPrompt({ onSelection }: Props) {
             onMouseEnter={() => setSelectedOption("no")}
             className={`block w-full text-left px-3 py-2 rounded text-sm transition-all ${
               selectedOption === "no"
-                ? "bg-blue-600/20 border border-blue-500 text-blue-300"
+                ? "bg-blue-600/20 border border-blue-500 text-blue-500 dark:text-blue-300"
                 : "bg-muted/10 border border-muted hover:bg-muted/20"
             }`}
           >
-            <span className="text-blue-400 mr-2">›</span>
+            <span className="text-blue-500 dark:text-blue-400 mr-2">›</span>
             No, show me normal view
           </button>
 
