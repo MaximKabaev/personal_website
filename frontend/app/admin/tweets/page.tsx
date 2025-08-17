@@ -7,6 +7,7 @@ import { ArrowLeft, RefreshCw, Check, X, Calendar, Hash, Heart, Repeat2, Message
 import AuthGuard from '@/components/AuthGuard'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAuthFetch } from '@/hooks/useAuthFetch'
+import { formatDate, formatTime } from '@/lib/utils'
 
 interface Tweet {
   id: string
@@ -202,21 +203,13 @@ function TweetsAdminPageContent() {
     setSelectedTweets(newSelection)
   }
 
-  const formatDate = (dateStr: string) => {
+  const formatDateHeader = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-GB', { 
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    })
-  }
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
     })
   }
 
@@ -326,7 +319,7 @@ function TweetsAdminPageContent() {
                 <div key={date} className="space-y-4">
                   <div className="flex items-center gap-2 text-lg font-bold">
                     <Calendar className="w-5 h-5" />
-                    {formatDate(date)}
+                    {formatDateHeader(date)}
                     <span className="text-sm text-muted-foreground font-normal">
                       ({dateTweets.length} tweet{dateTweets.length > 1 ? 's' : ''})
                     </span>

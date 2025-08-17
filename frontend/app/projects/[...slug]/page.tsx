@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getProject, getProjectByPath, getProjectDevlog } from "@/lib/api"
 import { ArrowLeft } from "lucide-react"
 import ClientThemeToggle from "@/components/ClientThemeToggle"
+import { formatDate, formatTime } from "@/lib/utils"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -131,17 +132,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                 <article key={entry.id} className="border-l-4 border-muted pl-6">
                   <div className="flex items-center gap-4 mb-3">
                     <time className="text-sm font-bold text-muted-foreground bg-muted px-2 py-1 rounded" suppressHydrationWarning>
-                      {new Date(entry.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
+                      {formatDate(entry.created_at)}
                     </time>
                     <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                      {new Date(entry.created_at).toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatTime(entry.created_at)}
                     </span>
                     {entry.entry_type && (
                       <span className={`text-xs px-2 py-0.5 rounded ${

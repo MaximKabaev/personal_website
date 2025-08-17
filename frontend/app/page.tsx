@@ -2,6 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getProjects, getRecentEntries, getFolderTree } from "@/lib/api"
 import ClientThemeToggle from "@/components/ClientThemeToggle"
+import { formatDate } from "@/lib/utils"
 
 export default async function HomePage() {
   let projects = [] as any[]
@@ -148,7 +149,7 @@ export default async function HomePage() {
               recentEntries.map((entry) => (
                 <div key={entry.id} className="border-l-2 border-muted pl-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <span>{new Date(entry.created_at).toLocaleDateString()}</span>
+                    <span>{formatDate(entry.created_at)}</span>
                     <span>•</span>
                     <Link href={`/projects/${entry.project_id}`} className="hover:text-primary transition-colors">
                       {entry.project?.name || 'Unknown Project'}

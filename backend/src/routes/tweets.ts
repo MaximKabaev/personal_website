@@ -144,9 +144,9 @@ router.post('/:id/convert', protectRoute, async (req, res) => {
       });
     }
 
-    // Add metrics to content
+    // Add metrics to content (without 'Engagement:' label)
     if (tweet.metrics && Object.keys(tweet.metrics).length > 0) {
-      content += `\n\nEngagement: ${tweet.metrics.like_count || 0} likes, ${tweet.metrics.retweet_count || 0} retweets`;
+      content += `\n\n${tweet.metrics.like_count || 0} likes, ${tweet.metrics.retweet_count || 0} retweets`;
     }
 
     // Create devlog entry with tweet's original timestamp
@@ -157,7 +157,7 @@ router.post('/:id/convert', protectRoute, async (req, res) => {
       RETURNING *`,
       [
         tweet.assigned_project_id,
-        `Tweet from ${new Date(tweet.created_at).toLocaleDateString()}`,
+        'Tweet', // Simple title without date
         content,
         entry_type,
         tags,
@@ -228,7 +228,7 @@ router.post('/batch-convert', protectRoute, async (req, res) => {
           RETURNING *`,
           [
             tweet.assigned_project_id,
-            `Tweet from ${new Date(tweet.created_at).toLocaleDateString()}`,
+            'Tweet', // Simple title without date
             content,
             entry_type,
             tags,

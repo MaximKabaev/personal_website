@@ -7,6 +7,7 @@ import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, C
 import AuthGuard from '@/components/AuthGuard'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAuthFetch } from '@/hooks/useAuthFetch'
+import { formatDate } from '@/lib/utils'
 
 interface Folder {
   id: string
@@ -1127,7 +1128,7 @@ function AdminPageContent() {
                                           <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
                                             <span className="flex items-center gap-1" suppressHydrationWarning>
                                               <Clock className="w-3 h-3" />
-                                              {new Date(entry.created_at).toLocaleDateString()}
+                                              {formatDate(entry.created_at)}
                                             </span>
                                             {entry.tags && entry.tags.length > 0 && (
                                               <span className="flex items-center gap-1">
