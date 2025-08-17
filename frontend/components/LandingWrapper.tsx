@@ -8,6 +8,7 @@ import ClientOnlyWhoami from "./ClientOnlyWhoami"
 import ClientOnlyFinger from "./ClientOnlyFinger"
 import { TerminalSequenceProvider } from "./TerminalSequence"
 import Link from "next/link"
+import WindowsFolder from "./WindowsFolder"
 
 type Props = {
   projects: any[]
@@ -124,58 +125,40 @@ export default function LandingWrapper({ projects, folders }: Props) {
 
             <section className="mb-12">
               <h2 className="text-2xl font-bold mb-6">Projects</h2>
-              <div className="grid gap-6">
-                {folders.map((folder) => {
-                  const folderProjects = projects.filter(p => p.folder_id === folder.id)
+              <div className="bg-background border border-muted rounded-lg p-4">
+                <div className="space-y-1">
+                  {/* Folders */}
+                  {folders.map((folder) => {
+                    const folderProjects = projects.filter(p => p.folder_id === folder.id)
+                    return (
+                      <WindowsFolder
+                        key={folder.id}
+                        folder={folder}
+                        projects={folderProjects}
+                      />
+                    )
+                  })}
                   
-                  return (
-                    <div key={folder.id} className="bg-muted/10 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold mb-3">{folder.name}</h3>
-                      <div className="grid gap-3">
-                        {folderProjects.length > 0 ? (
-                          folderProjects.map((project) => (
-                            <Link
-                              key={project.id}
-                              href={`/projects/${folder.slug}/${project.slug}`}
-                              className="block p-4 bg-background rounded border border-muted hover:border-primary transition-colors"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">{project.name}</span>
-                                <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded">
-                                  {project.status}
-                                </span>
-                              </div>
-                            </Link>
-                          ))
-                        ) : (
-                          <p className="text-muted-foreground italic">No projects yet</p>
-                        )}
-                      </div>
+                  {/* Root level projects */}
+                  {projects.filter(p => !p.folder_id).length > 0 && (
+                    <>
+                      {folders.length > 0 && (
+                        <div className="border-t border-muted my-2"></div>
+                      )}
+                      <WindowsFolder
+                        projects={projects.filter(p => !p.folder_id)}
+                        isRoot={true}
+                      />
+                    </>
+                  )}
+                  
+                  {/* No projects at all */}
+                  {projects.length === 0 && folders.length === 0 && (
+                    <div className="text-muted-foreground italic text-center py-8">
+                      No projects yet. Coming soon!
                     </div>
-                  )
-                })}
-                
-                {projects.filter(p => !p.folder_id).length > 0 && (
-                  <div className="bg-muted/10 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-3">Other Projects</h3>
-                    <div className="grid gap-3">
-                      {projects.filter(p => !p.folder_id).map((project) => (
-                        <Link
-                          key={project.id}
-                          href={`/projects/${project.slug}`}
-                          className="block p-4 bg-background rounded border border-muted hover:border-primary transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{project.name}</span>
-                            <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded">
-                              {project.status}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </section>
 
