@@ -144,11 +144,6 @@ router.post('/:id/convert', protectRoute, async (req, res) => {
       });
     }
 
-    // Add metrics to content (without 'Engagement:' label)
-    if (tweet.metrics && Object.keys(tweet.metrics).length > 0) {
-      content += `\n\n${tweet.metrics.like_count || 0} likes, ${tweet.metrics.retweet_count || 0} retweets`;
-    }
-
     // Create devlog entry with tweet's original timestamp
     const devlogEntry = await queryOne(
       `INSERT INTO devlog_entries (
@@ -251,7 +246,6 @@ router.post('/batch-convert', protectRoute, async (req, res) => {
     res.json({
       success: true,
       converted: results.length,
-      errors: errors.length,
       results,
       errors
     });
