@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, ChevronRight, Clock, Tag } from 'lucide-react'
+import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, ChevronRight, Clock, Tag, Edit2, X, Save } from 'lucide-react'
 
 interface Folder {
   id: string
@@ -49,6 +49,9 @@ export default function AdminPage() {
   // UI state
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<'folders' | 'projects' | 'devlog'>('folders')
+  const [editingFolder, setEditingFolder] = useState<string | null>(null)
+  const [editingProject, setEditingProject] = useState<string | null>(null)
+  const [editingDevlog, setEditingDevlog] = useState<string | null>(null)
 
   // Form states
   const [newFolder, setNewFolder] = useState({ name: '', slug: '', parent_id: '', display_order: 0 })
@@ -70,6 +73,11 @@ export default function AdminPage() {
     entry_type: 'progress' as const,
     tags: ''
   })
+  
+  // Edit form states
+  const [editFolderData, setEditFolderData] = useState<Partial<Folder>>({})
+  const [editProjectData, setEditProjectData] = useState<Partial<Project>>({})
+  const [editDevlogData, setEditDevlogData] = useState<Partial<DevlogEntry>>({})
 
   // Fetch data
   useEffect(() => {
@@ -228,6 +236,90 @@ export default function AdminPage() {
     }
   }
 
+  // Update folder
+  const handleUpdateFolder = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/folders/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editFolderData,
+          parent_id: editFolderData.parent_id || null,
+          display_order: Number(editFolderData.display_order)
+        })
+      })
+      
+      if (!res.ok) throw new Error('Failed to update folder')
+      
+      await fetchData()
+      setEditingFolder(null)
+      setEditFolderData({})
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update folder')
+    }
+  }
+  
+  // Update project
+  const handleUpdateProject = async (id: string) => {
+    try {
+      const techStack = typeof editProjectData.tech_stack === 'string' 
+        ? editProjectData.tech_stack.split(',').map(s => s.trim())
+        : editProjectData.tech_stack
+        
+      const res = await fetch(`${API_URL}/projects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editProjectData,
+          folder_id: editProjectData.folder_id || null,
+          tech_stack: techStack,
+          display_order: Number(editProjectData.display_order)
+        })
+      })
+      
+      if (!res.ok) throw new Error('Failed to update project')
+      
+      await fetchData()
+      setEditingProject(null)
+      setEditProjectData({})
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update project')
+    }
+  }
+  
+  // Update devlog entry
+  const handleUpdateDevlog = async (id: string) => {
+    try {
+      const tags = typeof editDevlogData.tags === 'string'
+        ? editDevlogData.tags.split(',').map(s => s.trim())
+        : editDevlogData.tags
+        
+      const res = await fetch(`${API_URL}/devlog/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editDevlogData,
+          tags: tags
+        })
+      })
+      
+      if (!res.ok) throw new Error('Failed to update devlog entry')
+      
+      // Refresh devlog for the affected project
+      const projectId = Object.keys(devlogEntries).find(pid => 
+        devlogEntries[pid].some(e => e.id === id)
+      )
+      if (projectId) {
+        await fetchProjectDevlog(projectId)
+      }
+      
+      setEditingDevlog(null)
+      setEditDevlogData({})
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update devlog entry')
+    }
+  }
+  
   // Delete folder
   const handleDeleteFolder = async (id: string) => {
     if (!confirm('Are you sure? This will delete the folder.')) return
@@ -433,22 +525,94 @@ export default function AdminPage() {
               ) : folders.length > 0 ? (
                 <div className="space-y-2">
                   {folders.map(folder => (
-                    <div key={folder.id} className="flex items-center justify-between bg-muted/10 px-4 py-2 rounded">
-                      <div>
-                        <span className="font-bold">{folder.name}</span>
-                        <span className="text-muted-foreground text-sm ml-2">/{folder.slug}</span>
-                        {folder.parent_id && (
-                          <span className="text-muted-foreground text-xs ml-2">
-                            (parent: {folders.find(f => f.id === folder.parent_id)?.name})
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteFolder(folder.id)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div key={folder.id} className="bg-muted/10 px-4 py-2 rounded">
+                      {editingFolder === folder.id ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={editFolderData.name || ''}
+                              onChange={(e) => setEditFolderData({ ...editFolderData, name: e.target.value })}
+                              className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              placeholder="Name"
+                            />
+                            <input
+                              type="text"
+                              value={editFolderData.slug || ''}
+                              onChange={(e) => setEditFolderData({ ...editFolderData, slug: e.target.value })}
+                              className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              placeholder="Slug"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <select
+                              value={editFolderData.parent_id || ''}
+                              onChange={(e) => setEditFolderData({ ...editFolderData, parent_id: e.target.value })}
+                              className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                            >
+                              <option value="">None (Root Level)</option>
+                              {folders.filter(f => f.id !== folder.id).map(f => (
+                                <option key={f.id} value={f.id}>{f.name}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              value={editFolderData.display_order || 0}
+                              onChange={(e) => setEditFolderData({ ...editFolderData, display_order: parseInt(e.target.value) || 0 })}
+                              className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              placeholder="Order"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleUpdateFolder(folder.id)}
+                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
+                            >
+                              <Save className="w-3 h-3 inline mr-1" />
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingFolder(null)
+                                setEditFolderData({})
+                              }}
+                              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                            >
+                              <X className="w-3 h-3 inline mr-1" />
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-bold">{folder.name}</span>
+                            <span className="text-muted-foreground text-sm ml-2">/{folder.slug}</span>
+                            {folder.parent_id && (
+                              <span className="text-muted-foreground text-xs ml-2">
+                                (parent: {folders.find(f => f.id === folder.parent_id)?.name})
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingFolder(folder.id)
+                                setEditFolderData(folder)
+                              }}
+                              className="text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFolder(folder.id)}
+                              className="text-red-400 hover:text-red-300 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -597,27 +761,139 @@ export default function AdminPage() {
                   {projects.map(project => {
                     const folder = folders.find(f => f.id === project.folder_id)
                     return (
-                      <div key={project.id} className="flex items-center justify-between bg-muted/10 px-4 py-2 rounded">
-                        <div>
-                          <span className="font-bold">{project.name}</span>
-                          <span className="text-muted-foreground text-sm ml-2">
-                            /{folder ? `${folder.slug}/` : ''}{project.slug}
-                          </span>
-                          <span className={`text-xs ml-2 px-2 py-0.5 rounded ${
-                            project.status === 'active' ? 'bg-green-900/50 text-green-300' :
-                            project.status === 'completed' ? 'bg-blue-900/50 text-blue-300' :
-                            project.status === 'paused' ? 'bg-yellow-900/50 text-yellow-300' :
-                            'bg-gray-900/50 text-gray-300'
-                          }`}>
-                            {project.status}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <div key={project.id} className="bg-muted/10 px-4 py-2 rounded">
+                        {editingProject === project.id ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={editProjectData.name || ''}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, name: e.target.value })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                placeholder="Name"
+                              />
+                              <input
+                                type="text"
+                                value={editProjectData.slug || ''}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, slug: e.target.value })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                placeholder="Slug"
+                              />
+                            </div>
+                            <textarea
+                              value={editProjectData.description || ''}
+                              onChange={(e) => setEditProjectData({ ...editProjectData, description: e.target.value })}
+                              className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              rows={2}
+                              placeholder="Description"
+                            />
+                            <div className="grid grid-cols-3 gap-2">
+                              <select
+                                value={editProjectData.folder_id || ''}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, folder_id: e.target.value })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              >
+                                <option value="">None (Root)</option>
+                                {folders.map(f => (
+                                  <option key={f.id} value={f.id}>{f.name}</option>
+                                ))}
+                              </select>
+                              <select
+                                value={editProjectData.status || 'active'}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, status: e.target.value as any })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              >
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="paused">Paused</option>
+                                <option value="archived">Archived</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={editProjectData.display_order || 0}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, display_order: parseInt(e.target.value) || 0 })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                placeholder="Order"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={typeof editProjectData.tech_stack === 'string' ? editProjectData.tech_stack : editProjectData.tech_stack?.join(', ') || ''}
+                              onChange={(e) => setEditProjectData({ ...editProjectData, tech_stack: e.target.value as any })}
+                              className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                              placeholder="Tech Stack (comma separated)"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="url"
+                                value={editProjectData.github_url || ''}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, github_url: e.target.value })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                placeholder="GitHub URL"
+                              />
+                              <input
+                                type="url"
+                                value={editProjectData.demo_url || ''}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, demo_url: e.target.value })}
+                                className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                placeholder="Demo URL"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleUpdateProject(project.id)}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
+                              >
+                                <Save className="w-3 h-3 inline mr-1" />
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingProject(null)
+                                  setEditProjectData({})
+                                }}
+                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                              >
+                                <X className="w-3 h-3 inline mr-1" />
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-bold">{project.name}</span>
+                              <span className="text-muted-foreground text-sm ml-2">
+                                /{folder ? `${folder.slug}/` : ''}{project.slug}
+                              </span>
+                              <span className={`text-xs ml-2 px-2 py-0.5 rounded ${
+                                project.status === 'active' ? 'bg-green-900/50 text-green-300' :
+                                project.status === 'completed' ? 'bg-blue-900/50 text-blue-300' :
+                                project.status === 'paused' ? 'bg-yellow-900/50 text-yellow-300' :
+                                'bg-gray-900/50 text-gray-300'
+                              }`}>
+                                {project.status}
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditingProject(project.id)
+                                  setEditProjectData(project)
+                                }}
+                                className="text-blue-400 hover:text-blue-300 transition-colors"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="text-red-400 hover:text-red-300 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -757,43 +1033,112 @@ export default function AdminPage() {
                               <div className="space-y-3 mt-3">
                                 {entries.map(entry => (
                                   <div key={entry.id} className="bg-background/50 p-3 rounded border border-muted">
-                                    <div className="flex items-start justify-between mb-2">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h4 className="font-bold">{entry.title}</h4>
-                                          <span className={`text-xs px-2 py-0.5 rounded ${
-                                            entry.entry_type === 'milestone' ? 'bg-blue-900/50 text-blue-300' :
-                                            entry.entry_type === 'feature' ? 'bg-green-900/50 text-green-300' :
-                                            entry.entry_type === 'bug_fix' ? 'bg-red-900/50 text-red-300' :
-                                            entry.entry_type === 'thoughts' ? 'bg-purple-900/50 text-purple-300' :
-                                            'bg-gray-900/50 text-gray-300'
-                                          }`}>
-                                            {entry.entry_type.replace('_', ' ')}
-                                          </span>
+                                    {editingDevlog === entry.id ? (
+                                      <div className="space-y-3">
+                                        <input
+                                          type="text"
+                                          value={editDevlogData.title || ''}
+                                          onChange={(e) => setEditDevlogData({ ...editDevlogData, title: e.target.value })}
+                                          className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                          placeholder="Title"
+                                        />
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <select
+                                            value={editDevlogData.entry_type || 'progress'}
+                                            onChange={(e) => setEditDevlogData({ ...editDevlogData, entry_type: e.target.value as any })}
+                                            className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                          >
+                                            <option value="progress">Progress</option>
+                                            <option value="milestone">Milestone</option>
+                                            <option value="feature">Feature</option>
+                                            <option value="bug_fix">Bug Fix</option>
+                                            <option value="thoughts">Thoughts</option>
+                                          </select>
+                                          <input
+                                            type="text"
+                                            value={typeof editDevlogData.tags === 'string' ? editDevlogData.tags : editDevlogData.tags?.join(', ') || ''}
+                                            onChange={(e) => setEditDevlogData({ ...editDevlogData, tags: e.target.value as any })}
+                                            className="px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                            placeholder="Tags (comma separated)"
+                                          />
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                                          <span className="flex items-center gap-1" suppressHydrationWarning>
-                                            <Clock className="w-3 h-3" />
-                                            {new Date(entry.created_at).toLocaleDateString()}
-                                          </span>
-                                          {entry.tags && entry.tags.length > 0 && (
-                                            <span className="flex items-center gap-1">
-                                              <Tag className="w-3 h-3" />
-                                              {entry.tags.join(', ')}
-                                            </span>
-                                          )}
+                                        <textarea
+                                          value={editDevlogData.content || ''}
+                                          onChange={(e) => setEditDevlogData({ ...editDevlogData, content: e.target.value })}
+                                          className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                          rows={4}
+                                          placeholder="Content"
+                                        />
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() => handleUpdateDevlog(entry.id)}
+                                            className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
+                                          >
+                                            <Save className="w-3 h-3 inline mr-1" />
+                                            Save
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              setEditingDevlog(null)
+                                              setEditDevlogData({})
+                                            }}
+                                            className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                                          >
+                                            <X className="w-3 h-3 inline mr-1" />
+                                            Cancel
+                                          </button>
                                         </div>
-                                        <p className="text-sm text-muted-foreground line-clamp-3">
-                                          {entry.content}
-                                        </p>
                                       </div>
-                                      <button
-                                        onClick={() => handleDeleteDevlogEntry(entry.id, project.id)}
-                                        className="text-red-400 hover:text-red-300 transition-colors ml-4"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
-                                    </div>
+                                    ) : (
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="font-bold">{entry.title}</h4>
+                                            <span className={`text-xs px-2 py-0.5 rounded ${
+                                              entry.entry_type === 'milestone' ? 'bg-blue-900/50 text-blue-300' :
+                                              entry.entry_type === 'feature' ? 'bg-green-900/50 text-green-300' :
+                                              entry.entry_type === 'bug_fix' ? 'bg-red-900/50 text-red-300' :
+                                              entry.entry_type === 'thoughts' ? 'bg-purple-900/50 text-purple-300' :
+                                              'bg-gray-900/50 text-gray-300'
+                                            }`}>
+                                              {entry.entry_type.replace('_', ' ')}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                                            <span className="flex items-center gap-1" suppressHydrationWarning>
+                                              <Clock className="w-3 h-3" />
+                                              {new Date(entry.created_at).toLocaleDateString()}
+                                            </span>
+                                            {entry.tags && entry.tags.length > 0 && (
+                                              <span className="flex items-center gap-1">
+                                                <Tag className="w-3 h-3" />
+                                                {entry.tags.join(', ')}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <p className="text-sm text-muted-foreground line-clamp-3">
+                                            {entry.content}
+                                          </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() => {
+                                              setEditingDevlog(entry.id)
+                                              setEditDevlogData(entry)
+                                            }}
+                                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                                          >
+                                            <Edit2 className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteDevlogEntry(entry.id, project.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>

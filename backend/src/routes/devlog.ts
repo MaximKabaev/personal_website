@@ -190,7 +190,7 @@ router.put('/:id', async (req, res) => {
     const updates = req.body;
     
     // Build dynamic UPDATE query
-    const updateFields = Object.keys(updates).filter(key => key !== 'id' && key !== 'project_id');
+    const updateFields = Object.keys(updates).filter(key => key !== 'id' && key !== 'project_id' && key !== 'created_at' && key !== 'updated_at');
     if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
