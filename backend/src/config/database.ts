@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,15 +10,21 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is required');
 }
 
-// Create a connection pool for better performance
+// Create a connection pool optimized for Supabase pooler
 export const pool = new Pool({
   connectionString,
   ssl: {
     rejectUnauthorized: false // Required for Supabase
   },
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  // Optimized settings for Supabase pooler
+  max: 10, // Reduced max connections to avoid pooler limits
+  idleTimeoutMillis: 10000, // Close idle connections faster (10 seconds)
+  connectionTimeoutMillis: 5000, // Give more time for initial connection
+  // Additional settings for stability
+  statement_timeout: 60000, // 60 second statement timeout
+  query_timeout: 60000, // 60 second query timeout
+  keepAlive: true, // Enable TCP keepalive
+  keepAliveInitialDelayMillis: 10000, // Start keepalive after 10 seconds
 });
 
 // Test the connection
@@ -26,9 +32,11 @@ pool.on('connect', () => {
   console.log('Connected to PostgreSQL database');
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+// Handle pool errors more gracefully - don't exit the process
+pool.on('error', (err: Error, client: PoolClient) => {
+  console.error('Unexpected error on idle client:', err.message);
+  // Don't exit - the pool will automatically create new connections as needed
+  // This prevents the app from crashing when Supabase pooler terminates idle connections
 });
 
 // Database types
@@ -79,18 +87,32 @@ export interface ProjectMedia {
   created_at: Date;
 }
 
-// Helper function for queries
-export async function query<T = any>(text: string, params?: any[]): Promise<T[]> {
+// Helper function for queries with automatic retry
+export async function query<T = any>(text: string, params?: any[], retries = 3): Promise<T[]> {
   const start = Date.now();
-  try {
-    const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
-    return res.rows;
-  } catch (error) {
-    console.error('Database query error:', error);
-    throw error;
+  let lastError: any;
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await pool.query(text, params);
+      const duration = Date.now() - start;
+      console.log('Executed query', { text: text.substring(0, 50), duration, rows: res.rowCount });
+      return res.rows;
+    } catch (error: any) {
+      lastError = error;
+      console.error(`Database query error (attempt ${i + 1}/${retries}):`, error.message);
+      
+      // If it's a connection error and we have retries left, wait before retrying
+      if (i < retries - 1 && (error.code === 'ECONNRESET' || error.code === 'XX000' || error.code === 'ETIMEDOUT')) {
+        console.log(`Retrying query in ${(i + 1) * 1000}ms...`);
+        await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+      } else {
+        break;
+      }
+    }
   }
+  
+  throw lastError;
 }
 
 // Helper function for single row queries
