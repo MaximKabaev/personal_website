@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import ClientThemeToggle from "./ClientThemeToggle"
 import DevPrompt from "./DevPrompt"
-import ClientOnlyTree from "./ClientOnlyTree"
 import ClientOnlyWhoami from "./ClientOnlyWhoami"
 import ClientOnlyFinger from "./ClientOnlyFinger"
+import DevTerminalSection from "./DevTerminalSection"
 import { TerminalSequenceProvider } from "./TerminalSequence"
 import Link from "next/link"
 import WindowsFolder from "./WindowsFolder"
@@ -103,9 +103,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
               <ClientOnlyWhoami />
             </section>
 
-            <section className="mb-12">
-              <ClientOnlyTree projects={projects} folders={folders} />
-            </section>
+            <DevTerminalSection projects={projects} folders={folders} />
 
             <section>
               <ClientOnlyFinger />
