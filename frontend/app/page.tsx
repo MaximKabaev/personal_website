@@ -3,10 +3,10 @@ import Image from "next/image"
 import { getProjects, getRecentEntries, getFolderTree } from "@/lib/api"
 
 export default async function HomePage() {
-  let projects = []
-  let folders = []
-  let recentEntries = []
-  
+  let projects = [] as any[]
+  let folders = [] as any[]
+  let recentEntries = [] as any[]
+
   try {
     [projects, folders] = await Promise.all([
       getProjects(),
@@ -41,7 +41,7 @@ export default async function HomePage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white mb-0">MAXIM KABAEV</h1>
-                <p className="text-slate-300 text-sm -mt-0.5">developer & engineer</p>
+                <p className="text-slate-300 text-sm -mt-0.5">software & aerospace engineer</p>
               </div>
             </div>
           </div>
@@ -162,8 +162,8 @@ export default async function HomePage() {
         {/* Contact Section */}
         <section>
           <h2 className="text-lg font-bold mb-3 uppercase tracking-wide">CONTACT</h2>
-          <p className="text-muted-foreground">reach out via email or find me on various platforms.</p>
-          <p className="text-muted-foreground mt-2">always open to discussing interesting projects and ideas.</p>
+          <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21</p>
+          <p className="text-muted-foreground mt-2">always open to discuss anything.</p>
         </section>
       </div>
     </div>

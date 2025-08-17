@@ -78,13 +78,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
         {/* Project Description */}
         <section className="mb-12">
-          <h2 className="text-lg font-bold mb-4 uppercase tracking-wide">PROJECT OVERVIEW</h2>
-          <p className="text-muted-foreground leading-relaxed">{project.description || 'No description provided.'}</p>
-          
-          {/* Tech Stack */}
-          {project.tech_stack && project.tech_stack.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-bold mb-2 uppercase tracking-wide text-muted-foreground">Tech Stack</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <h2 className="text-lg font-bold uppercase tracking-wide whitespace-nowrap">PROJECT OVERVIEW</h2>
+            {/* Tech Stack Tags */}
+            {project.tech_stack && project.tech_stack.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {project.tech_stack.map((tech: string) => (
                   <span key={tech} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
@@ -92,8 +89,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                   </span>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <p className="text-muted-foreground leading-relaxed">{project.description || 'No description provided.'}</p>
           
           {/* Links */}
           <div className="mt-4 flex gap-4">
@@ -128,14 +126,14 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               entries.map((entry) => (
                 <article key={entry.id} className="border-l-4 border-muted pl-6">
                   <div className="flex items-center gap-4 mb-3">
-                    <time className="text-sm font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <time className="text-sm font-bold text-muted-foreground bg-muted px-2 py-1 rounded" suppressHydrationWarning>
                       {new Date(entry.created_at).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
                       })}
                     </time>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {new Date(entry.created_at).toLocaleTimeString("en-US", {
                         hour: "2-digit",
                         minute: "2-digit",
