@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query, queryOne, Project } from '../config/database';
+import { protectRoute } from '../middleware/auth';
 
 const router = Router();
 
@@ -96,8 +97,8 @@ router.get('/by-path/:folderSlug/:projectSlug', async (req, res) => {
   }
 });
 
-// Create new project
-router.post('/', async (req, res) => {
+// Create new project (protected)
+router.post('/', protectRoute, async (req, res) => {
   try {
     const { name, slug, description, folder_id, status, tech_stack, github_url, demo_url, display_order } = req.body;
     
@@ -115,8 +116,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update project
-router.put('/:id', async (req, res) => {
+// Update project (protected)
+router.put('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -146,8 +147,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete project
-router.delete('/:id', async (req, res) => {
+// Delete project (protected)
+router.delete('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     

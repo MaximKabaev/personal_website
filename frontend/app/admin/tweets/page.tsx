@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, RefreshCw, Check, X, Calendar, Hash, Heart, Repeat2, MessageCircle, ExternalLink } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Check, X, Calendar, Hash, Heart, Repeat2, MessageCircle, ExternalLink, LogOut } from 'lucide-react'
+import AuthGuard from '@/components/AuthGuard'
+import { useAuth } from '@/contexts/AuthContext'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 
 interface Tweet {
   id: string
@@ -43,7 +46,9 @@ interface GroupedTweets {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
 
-export default function TweetsAdminPage() {
+function TweetsAdminPageContent() {
+  const { signOut } = useAuth()
+  const { authFetch } = useAuthFetch()
   const [tweets, setTweets] = useState<GroupedTweets>({})
   const [projects, setProjects] = useState<Project[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
@@ -61,9 +66,9 @@ export default function TweetsAdminPage() {
     try {
       setLoading(true)
       const [tweetsRes, projectsRes, foldersRes] = await Promise.all([
-        fetch(`${API_URL}/tweets/grouped`),
-        fetch(`${API_URL}/projects`),
-        fetch(`${API_URL}/folders`)
+        authFetch(`${API_URL}/tweets/grouped`),
+        authFetch(`${API_URL}/projects`),
+        authFetch(`${API_URL}/folders`)
       ])
 
       if (!tweetsRes.ok || !projectsRes.ok || !foldersRes.ok) {
@@ -91,7 +96,7 @@ export default function TweetsAdminPage() {
       setSyncing(true)
       setError(null)
       
-      const res = await fetch(`${API_URL}/tweets/sync`, {
+      const res = await authFetch(`${API_URL}/tweets/sync`, {
         method: 'POST'
       })
 
@@ -115,7 +120,7 @@ export default function TweetsAdminPage() {
 
   const assignTweetToProject = async (tweetId: string, projectId: string | null) => {
     try {
-      const res = await fetch(`${API_URL}/tweets/${tweetId}/assign`, {
+      const res = await authFetch(`${API_URL}/tweets/${tweetId}/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId })
@@ -134,7 +139,7 @@ export default function TweetsAdminPage() {
 
   const convertToDevlog = async (tweetId: string) => {
     try {
-      const res = await fetch(`${API_URL}/tweets/${tweetId}/convert`, {
+      const res = await authFetch(`${API_URL}/tweets/${tweetId}/convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entry_type: 'thoughts' })
@@ -161,7 +166,7 @@ export default function TweetsAdminPage() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/tweets/batch-convert`, {
+      const res = await authFetch(`${API_URL}/tweets/batch-convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -246,14 +251,23 @@ export default function TweetsAdminPage() {
                   <p className="text-blue-200 text-sm -mt-0.5">import & convert tweets to devlog</p>
                 </div>
               </div>
-              <button
-                onClick={syncTweets}
-                disabled={syncing}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded transition-colors flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing...' : 'Sync Tweets'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={syncTweets}
+                  disabled={syncing}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? 'Syncing...' : 'Sync Tweets'}
+                </button>
+                <button
+                  onClick={() => signOut()}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -458,5 +472,13 @@ export default function TweetsAdminPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TweetsAdminPage() {
+  return (
+    <AuthGuard>
+      <TweetsAdminPageContent />
+    </AuthGuard>
   )
 }

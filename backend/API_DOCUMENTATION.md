@@ -9,8 +9,36 @@ http://localhost:3001/api
 The API uses PostgreSQL via Supabase with connection pooling for optimal performance.
 
 ## Authentication
-Currently, all endpoints are public read. Write operations will require authentication in the future.
-**Note**: The `/admin` page currently has no authentication - add auth before deploying to production.
+
+### Overview
+The API uses Supabase JWT tokens for authentication. Protected endpoints require a valid Bearer token in the Authorization header.
+
+### Authentication Levels:
+- **Public Read**: GET endpoints for projects, folders, and devlog are publicly accessible
+- **Protected Write**: All POST, PUT, DELETE operations require authentication
+- **Strictly Protected**: Sensitive operations like tweet syncing require authentication even in development
+
+### Request Headers
+For protected endpoints, include:
+```
+Authorization: Bearer YOUR_SUPABASE_JWT_TOKEN
+Content-Type: application/json
+```
+
+### Development Mode
+In development (`NODE_ENV=development`), the auth middleware allows:
+- Unauthenticated access if no Authorization header is present
+- Validates token if Authorization header is provided
+- This allows local development without Supabase configuration
+
+### Production Mode
+In production, all protected endpoints strictly require valid authentication.
+
+### Admin Panel
+The `/admin` routes are protected by:
+- Frontend: AuthGuard component that redirects to login
+- Backend: All write operations require authentication
+- Login page at `/admin/login` (email/password only, no signup)
 
 ## Response Format
 All responses are in JSON format. Error responses follow this structure:

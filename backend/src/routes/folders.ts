@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query, queryOne, Folder } from '../config/database';
+import { protectRoute } from '../middleware/auth';
 
 const router = Router();
 
@@ -85,8 +86,8 @@ router.get('/:identifier', async (req, res) => {
   }
 });
 
-// Create new folder
-router.post('/', async (req, res) => {
+// Create new folder (protected)
+router.post('/', protectRoute, async (req, res) => {
   try {
     const { name, slug, parent_id, display_order } = req.body;
     
@@ -108,8 +109,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update folder
-router.put('/:id', async (req, res) => {
+// Update folder (protected)
+router.put('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -139,8 +140,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete folder
-router.delete('/:id', async (req, res) => {
+// Delete folder (protected)
+router.delete('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     

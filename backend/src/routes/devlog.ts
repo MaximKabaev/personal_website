@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { query, queryOne, DevlogEntry } from '../config/database';
+import { protectRoute } from '../middleware/auth';
 
 const router = Router();
 
@@ -160,8 +161,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new devlog entry
-router.post('/', async (req, res) => {
+// Create new devlog entry (protected)
+router.post('/', protectRoute, async (req, res) => {
   try {
     const { project_id, title, content, entry_type, tags } = req.body;
     
@@ -183,8 +184,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update devlog entry
-router.put('/:id', async (req, res) => {
+// Update devlog entry (protected)
+router.put('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -214,8 +215,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete devlog entry
-router.delete('/:id', async (req, res) => {
+// Delete devlog entry (protected)
+router.delete('/:id', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     

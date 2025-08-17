@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { query, queryOne } from '../config/database';
 import twitterService, { StoredTweet } from '../services/twitter';
+import { protectRoute, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// Get all tweets with optional date filtering
-router.get('/', async (req, res) => {
+// Get all tweets with optional date filtering (protected)
+router.get('/', protectRoute, async (req, res) => {
   try {
     const { date, project_id, converted } = req.query;
     
@@ -41,8 +42,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get tweets grouped by date
-router.get('/grouped', async (req, res) => {
+// Get tweets grouped by date (protected)
+router.get('/grouped', protectRoute, async (req, res) => {
   try {
     const tweets = await query<StoredTweet & { date: string }>(
       `SELECT *, DATE(created_at) as date 
@@ -67,8 +68,8 @@ router.get('/grouped', async (req, res) => {
   }
 });
 
-// Sync tweets from Twitter
-router.post('/sync', async (req, res) => {
+// Sync tweets from Twitter (strictly protected)
+router.post('/sync', requireAuth, async (req, res) => {
   try {
     const result = await twitterService.syncTweets();
     res.json({
@@ -81,8 +82,8 @@ router.post('/sync', async (req, res) => {
   }
 });
 
-// Assign tweet to project
-router.post('/:id/assign', async (req, res) => {
+// Assign tweet to project (protected)
+router.post('/:id/assign', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     const { project_id } = req.body;
@@ -103,8 +104,8 @@ router.post('/:id/assign', async (req, res) => {
   }
 });
 
-// Convert tweet to devlog entry
-router.post('/:id/convert', async (req, res) => {
+// Convert tweet to devlog entry (protected)
+router.post('/:id/convert', protectRoute, async (req, res) => {
   try {
     const { id } = req.params;
     const { entry_type = 'thoughts' } = req.body;
@@ -181,8 +182,8 @@ router.post('/:id/convert', async (req, res) => {
   }
 });
 
-// Batch convert multiple tweets
-router.post('/batch-convert', async (req, res) => {
+// Batch convert multiple tweets (protected)
+router.post('/batch-convert', protectRoute, async (req, res) => {
   try {
     const { tweet_ids, entry_type = 'thoughts' } = req.body;
 

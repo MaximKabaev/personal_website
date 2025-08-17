@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, ChevronRight, Clock, Tag, Edit2, X, Save } from 'lucide-react'
+import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, ChevronRight, Clock, Tag, Edit2, X, Save, LogOut } from 'lucide-react'
+import AuthGuard from '@/components/AuthGuard'
+import { useAuth } from '@/contexts/AuthContext'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 
 interface Folder {
   id: string
@@ -39,7 +42,9 @@ interface DevlogEntry {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
 
-export default function AdminPage() {
+function AdminPageContent() {
+  const { signOut } = useAuth()
+  const { authFetch } = useAuthFetch()
   const [folders, setFolders] = useState<Folder[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [devlogEntries, setDevlogEntries] = useState<Record<string, DevlogEntry[]>>({})
@@ -88,8 +93,8 @@ export default function AdminPage() {
     try {
       setLoading(true)
       const [foldersRes, projectsRes] = await Promise.all([
-        fetch(`${API_URL}/folders`),
-        fetch(`${API_URL}/projects`)
+        authFetch(`${API_URL}/folders`),
+        authFetch(`${API_URL}/projects`)
       ])
       
       if (!foldersRes.ok || !projectsRes.ok) {
@@ -113,7 +118,7 @@ export default function AdminPage() {
   // Fetch devlog entries for a project
   const fetchProjectDevlog = async (projectId: string) => {
     try {
-      const res = await fetch(`${API_URL}/devlog/project/${projectId}`)
+      const res = await authFetch(`${API_URL}/devlog/project/${projectId}`)
       if (!res.ok) throw new Error('Failed to fetch devlog entries')
       const entries = await res.json()
       setDevlogEntries(prev => ({ ...prev, [projectId]: entries }))
@@ -141,7 +146,7 @@ export default function AdminPage() {
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch(`${API_URL}/folders`, {
+      const res = await authFetch(`${API_URL}/folders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,7 +169,7 @@ export default function AdminPage() {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch(`${API_URL}/projects`, {
+      const res = await authFetch(`${API_URL}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -203,7 +208,7 @@ export default function AdminPage() {
     }
     
     try {
-      const res = await fetch(`${API_URL}/devlog`, {
+      const res = await authFetch(`${API_URL}/devlog`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,7 +244,7 @@ export default function AdminPage() {
   // Update folder
   const handleUpdateFolder = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/folders/${id}`, {
+      const res = await authFetch(`${API_URL}/folders/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -266,7 +271,7 @@ export default function AdminPage() {
         ? editProjectData.tech_stack.split(',').map(s => s.trim())
         : editProjectData.tech_stack
         
-      const res = await fetch(`${API_URL}/projects/${id}`, {
+      const res = await authFetch(`${API_URL}/projects/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -294,7 +299,7 @@ export default function AdminPage() {
         ? editDevlogData.tags.split(',').map(s => s.trim())
         : editDevlogData.tags
         
-      const res = await fetch(`${API_URL}/devlog/${id}`, {
+      const res = await authFetch(`${API_URL}/devlog/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -325,7 +330,7 @@ export default function AdminPage() {
     if (!confirm('Are you sure? This will delete the folder.')) return
     
     try {
-      const res = await fetch(`${API_URL}/folders/${id}`, {
+      const res = await authFetch(`${API_URL}/folders/${id}`, {
         method: 'DELETE'
       })
       
@@ -342,7 +347,7 @@ export default function AdminPage() {
     if (!confirm('Are you sure? This will delete the project and all its devlog entries.')) return
     
     try {
-      const res = await fetch(`${API_URL}/projects/${id}`, {
+      const res = await authFetch(`${API_URL}/projects/${id}`, {
         method: 'DELETE'
       })
       
@@ -359,7 +364,7 @@ export default function AdminPage() {
     if (!confirm('Are you sure? This will delete the devlog entry.')) return
     
     try {
-      const res = await fetch(`${API_URL}/devlog/${entryId}`, {
+      const res = await authFetch(`${API_URL}/devlog/${entryId}`, {
         method: 'DELETE'
       })
       
@@ -384,20 +389,29 @@ export default function AdminPage() {
         <div className="relative overflow-hidden rounded-lg mt-8">
           <div className="absolute inset-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900"></div>
           <div className="relative z-10 py-8 px-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500">
-                <Image
-                  src="/profile-avatar.jpg"
-                  alt="Admin"
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500">
+                  <Image
+                    src="/profile-avatar.jpg"
+                    alt="Admin"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-white mb-0">ADMIN PANEL</h1>
+                  <p className="text-red-200 text-sm -mt-0.5">manage projects, folders & devlog</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white mb-0">ADMIN PANEL</h1>
-                <p className="text-red-200 text-sm -mt-0.5">manage projects, folders & devlog</p>
-              </div>
+              <button
+                onClick={() => signOut()}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors flex items-center gap-2 text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -1165,5 +1179,13 @@ export default function AdminPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <AuthGuard>
+      <AdminPageContent />
+    </AuthGuard>
   )
 }
