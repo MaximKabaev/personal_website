@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { JetBrains_Mono } from "next/font/google"
+import { ThemeProvider } from "@/contexts/ThemeContext"
 import "./globals.css"
 
 const jetbrainsMono = JetBrains_Mono({
@@ -21,8 +22,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} antialiased`}>
-      <body className="font-mono">{children}</body>
+    <html lang="en" className={`${jetbrainsMono.variable} antialiased`} suppressHydrationWarning>
+      <body className="font-mono">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }
