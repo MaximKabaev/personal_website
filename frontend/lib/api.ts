@@ -1,5 +1,4 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-console.log('API_URL configured as:', API_URL);
 
 export interface Folder {
   id: string;
@@ -72,10 +71,7 @@ export async function getProject(identifier: string): Promise<Project> {
 }
 
 export async function getProjectByPath(folderSlug: string, projectSlug: string): Promise<Project> {
-  const url = `${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`;
-  console.log('Fetching project from:', url);
-  
-  const res = await fetch(url, {
+  const res = await fetch(`${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -86,12 +82,7 @@ export async function getProjectByPath(folderSlug: string, projectSlug: string):
     // Add next revalidate to force dynamic fetching
     next: { revalidate: 0 }
   });
-  
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error(`Failed to fetch project. Status: ${res.status}, Response: ${errorText}`);
-    throw new Error(`Failed to fetch project: ${res.status} - ${errorText}`);
-  }
+  if (!res.ok) throw new Error('Failed to fetch project');
   return res.json();
 }
 
