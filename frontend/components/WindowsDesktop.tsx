@@ -360,14 +360,16 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
         }}
       >
         {/* Resize Handles */}
-        <div className={`absolute top-0 left-0 w-2 h-2 ${getCursorStyle('nw')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'nw')} />
-        <div className={`absolute top-0 right-0 w-2 h-2 ${getCursorStyle('ne')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'ne')} />
-        <div className={`absolute bottom-0 left-0 w-2 h-2 ${getCursorStyle('sw')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'sw')} />
-        <div className={`absolute bottom-0 right-0 w-2 h-2 ${getCursorStyle('se')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'se')} />
-        <div className={`absolute top-0 left-2 right-2 h-2 ${getCursorStyle('n')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'n')} />
-        <div className={`absolute bottom-0 left-2 right-2 h-2 ${getCursorStyle('s')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 's')} />
-        <div className={`absolute left-0 top-2 bottom-2 w-2 ${getCursorStyle('w')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'w')} />
-        <div className={`absolute right-0 top-2 bottom-2 w-2 ${getCursorStyle('e')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'e')} />
+        {/* Corners - 16px (4 * 4 = w-4 h-4) for easier grabbing */}
+        <div className={`absolute -top-1 -left-1 w-4 h-4 ${getCursorStyle('nw')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'nw')} />
+        <div className={`absolute -top-1 -right-1 w-4 h-4 ${getCursorStyle('ne')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'ne')} />
+        <div className={`absolute -bottom-1 -left-1 w-4 h-4 ${getCursorStyle('sw')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'sw')} />
+        <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getCursorStyle('se')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'se')} />
+        {/* Sides - 12px wide/tall (w-3/h-3) for much easier grabbing */}
+        <div className={`absolute -top-1 left-4 right-4 h-3 ${getCursorStyle('n')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'n')} />
+        <div className={`absolute -bottom-1 left-4 right-4 h-3 ${getCursorStyle('s')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 's')} />
+        <div className={`absolute -left-1 top-4 bottom-4 w-3 ${getCursorStyle('w')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'w')} />
+        <div className={`absolute -right-1 top-4 bottom-4 w-3 ${getCursorStyle('e')}`} onMouseDown={(e) => handleMouseDown(e, 'resize', 'e')} />
 
         {/* Window Content */}
         <div className="w-full h-full">
