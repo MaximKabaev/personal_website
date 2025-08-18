@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from "react"
 import Link from "next/link"
+import BugMinigame from "./BugMinigame"
 import { 
   ChevronRight, 
   Folder, 
@@ -55,11 +56,17 @@ export default function WindowsExplorer({
 }: Props) {
   const [currentPath, setCurrentPath] = useState<string[]>(['My Computer', 'Projects'])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null) // null means root level
+  const [currentLevel, setCurrentLevel] = useState<'my-computer' | 'projects'>('projects')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set())
-  const [navigationHistory, setNavigationHistory] = useState<Array<{path: string[], folderId: string | null}>>([{path: ['My Computer', 'Projects'], folderId: null}])
+  const [navigationHistory, setNavigationHistory] = useState<Array<{path: string[], folderId: string | null, level: 'my-computer' | 'projects'}>>([{path: ['My Computer', 'Projects'], folderId: null, level: 'projects'}])
   const [historyIndex, setHistoryIndex] = useState(0)
+  const [isMinigameActive, setIsMinigameActive] = useState(false)
+  const [gameScore, setGameScore] = useState(0)
+  const [gameTime, setGameTime] = useState(30)
+  const [isGameEnded, setIsGameEnded] = useState(false)
+  const [finalScore, setFinalScore] = useState(0)
 
   const handleFolderClick = (folderId: string) => {
     const newOpenFolders = new Set(openFolders)
@@ -82,17 +89,28 @@ export default function WindowsExplorer({
     setSelectedItems(newSelected)
   }
 
-  const addToNavigationHistory = (path: string[], folderId: string | null) => {
+  const addToNavigationHistory = (path: string[], folderId: string | null, level: 'my-computer' | 'projects') => {
     // Remove any forward history when navigating to a new location
     const newHistory = navigationHistory.slice(0, historyIndex + 1)
-    newHistory.push({ path, folderId })
+    newHistory.push({ path, folderId, level })
     setNavigationHistory(newHistory)
     setHistoryIndex(newHistory.length - 1)
   }
 
-  const handleDoubleClick = (itemId: string, itemType: 'folder' | 'project') => {
+  const handleDoubleClick = (itemId: string, itemType: 'folder' | 'project' | 'file') => {
     if (itemType === 'folder') {
       const folderId = itemId.replace('folder-', '')
+      
+      // Handle special case: Projects folder from My Computer level
+      if (folderId === 'projects' && currentLevel === 'my-computer') {
+        const newPath = ['My Computer', 'Projects']
+        setCurrentLevel('projects')
+        setCurrentPath(newPath)
+        setCurrentFolderId(null)
+        addToNavigationHistory(newPath, null, 'projects')
+        return
+      }
+      
       const folder = folders.find(f => f.id === folderId)
       
       // Navigate into the folder
@@ -100,9 +118,15 @@ export default function WindowsExplorer({
         const newPath = ['My Computer', 'Projects', folder.name]
         setCurrentFolderId(folderId)
         setCurrentPath(newPath)
-        addToNavigationHistory(newPath, folderId)
+        addToNavigationHistory(newPath, folderId, 'projects')
         // Also expand it in the tree
         handleFolderClick(folderId)
+      }
+    } else if (itemType === 'file') {
+      // Handle special files like play.exe
+      if (itemId === 'play') {
+        // Trigger minigame
+        setIsMinigameActive(true)
       }
     }
   }
@@ -113,6 +137,7 @@ export default function WindowsExplorer({
       const historyItem = navigationHistory[newIndex]
       setCurrentFolderId(historyItem.folderId)
       setCurrentPath(historyItem.path)
+      setCurrentLevel(historyItem.level)
       setHistoryIndex(newIndex)
       setSelectedItems(new Set())
     }
@@ -124,18 +149,28 @@ export default function WindowsExplorer({
       const historyItem = navigationHistory[newIndex]
       setCurrentFolderId(historyItem.folderId)
       setCurrentPath(historyItem.path)
+      setCurrentLevel(historyItem.level)
       setHistoryIndex(newIndex)
       setSelectedItems(new Set())
     }
   }
 
   const handlePathSegmentClick = (segmentIndex: number) => {
-    if (segmentIndex === 0 || segmentIndex === 1) {
-      // Clicked on "My Computer" or "Projects" - go to root
+    if (segmentIndex === 0) {
+      // Clicked on "My Computer" - go to My Computer level
+      const newPath = ['My Computer']
+      setCurrentFolderId(null)
+      setCurrentPath(newPath)
+      setCurrentLevel('my-computer')
+      addToNavigationHistory(newPath, null, 'my-computer')
+      setSelectedItems(new Set())
+    } else if (segmentIndex === 1) {
+      // Clicked on "Projects" - go to Projects level
       const newPath = ['My Computer', 'Projects']
       setCurrentFolderId(null)
       setCurrentPath(newPath)
-      addToNavigationHistory(newPath, null)
+      setCurrentLevel('projects')
+      addToNavigationHistory(newPath, null, 'projects')
       setSelectedItems(new Set())
     } else if (segmentIndex === 2 && currentPath.length === 3) {
       // Clicked on folder name when we're inside it - do nothing (already there)
@@ -145,8 +180,25 @@ export default function WindowsExplorer({
 
   // Get items to display in right pane based on current location
   const getCurrentDisplayItems = () => {
-    if (currentFolderId === null) {
-      // Show root level - all folders and root projects
+    if (currentLevel === 'my-computer') {
+      // Show My Computer level - Projects folder and play.exe
+      return {
+        folders: [{
+          id: 'projects',
+          name: 'Projects',
+          slug: 'projects'
+        }],
+        projects: [{
+          id: 'play',
+          name: 'play.exe',
+          slug: 'play',
+          status: 'Executable',
+          folder_id: null,
+          isExecutable: true
+        }]
+      }
+    } else if (currentFolderId === null) {
+      // Show Projects level - all folders and root projects
       return {
         folders: folders,
         projects: projects.filter(p => !p.folder_id)
@@ -164,8 +216,44 @@ export default function WindowsExplorer({
 
   const totalItems = displayItems.folders.length + displayItems.projects.length
 
+  const handleCloseMinigame = () => {
+    setIsMinigameActive(false)
+    setGameScore(0)
+    setGameTime(30)
+    setIsGameEnded(false)
+    setFinalScore(0)
+  }
+
+  const handleScoreChange = (score: number) => {
+    setGameScore(score)
+  }
+
+  const handleTimeChange = (time: number) => {
+    setGameTime(time)
+  }
+
+  const handleGameEnd = (finalScore: number) => {
+    setIsGameEnded(true)
+    setFinalScore(finalScore)
+    setIsMinigameActive(false)
+  }
+
+  const handleStatusBarClick = () => {
+    if (isGameEnded) {
+      setIsGameEnded(false)
+      setFinalScore(0)
+    }
+  }
+
   return (
-    <div className="bg-[#f0f0f0] dark:bg-[#2d2d30] border border-gray-400 dark:border-gray-600 rounded-sm font-sans h-full w-full overflow-hidden flex flex-col">
+    <>
+      <style jsx>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+      `}</style>
+      <div className="bg-[#f0f0f0] dark:bg-[#2d2d30] border border-gray-400 dark:border-gray-600 rounded-sm font-sans h-full w-full overflow-hidden flex flex-col relative">
       {/* Title Bar */}
       <div 
         className="bg-gradient-to-r from-[#0054e3] to-[#0041ac] text-white px-2 py-1 flex items-center justify-between text-sm cursor-move select-none"
@@ -385,7 +473,45 @@ export default function WindowsExplorer({
 
               {displayItems.projects.map((project) => {
                 const isSelected = selectedItems.has(`project-${project.id}`)
+                const isExecutable = (project as any).isExecutable
                 
+                // For executable files, use div instead of Link
+                if (isExecutable) {
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => handleItemSelect(`project-${project.id}`)}
+                      onDoubleClick={() => handleDoubleClick(project.id, 'file')}
+                      className={`flex items-center gap-3 p-2 cursor-pointer ${
+                        isSelected 
+                          ? 'bg-[#316ac5] text-white hover:bg-[#316ac5] hover:text-white' 
+                          : 'text-black dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-800'
+                      } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
+                    >
+                      <FileText className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-green-600 dark:text-green-400`} />
+                      {viewMode === 'details' ? (
+                        <>
+                          <div className="flex-1">
+                            <span className="font-medium">{project.name}</span>
+                          </div>
+                          <div className="w-24 text-center text-sm">{project.status}</div>
+                          <div className="w-24 text-center text-sm">Executable</div>
+                        </>
+                      ) : (
+                        <div className={`flex-1 ${viewMode === 'icons' ? 'text-center' : ''}`}>
+                          <span className="font-medium">{project.name}</span>
+                        </div>
+                      )}
+                      {viewMode === 'list' && (
+                        <span className="text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded">
+                          {project.status}
+                        </span>
+                      )}
+                    </div>
+                  )
+                }
+                
+                // Regular project files
                 return (
                   <Link
                     key={project.id}
@@ -425,10 +551,45 @@ export default function WindowsExplorer({
       </div>
 
       {/* Status Bar */}
-      <div className="bg-[#ece9d8] border-t border-gray-400 px-2 py-1 text-sm text-gray-700 flex items-center justify-between">
+      <div 
+        className={`bg-[#ece9d8] border-t border-gray-400 px-2 py-1 text-sm text-gray-700 flex items-center justify-between ${isGameEnded ? 'cursor-pointer' : ''}`}
+        onClick={handleStatusBarClick}
+      >
         <span>{totalItems} object{totalItems !== 1 ? 's' : ''}</span>
-        <span>My Computer</span>
+        <div className="flex items-center gap-4">
+          {isMinigameActive && (
+            <>
+              <span>Score: <span className="font-bold text-yellow-600">{gameScore}</span></span>
+              <span>Time: <span className="font-bold text-red-600">{gameTime}s</span></span>
+            </>
+          )}
+          {isGameEnded && (
+            <span 
+              className="font-bold text-green-600"
+              style={{
+                animation: 'blink 0.5s step-start infinite'
+              }}
+            >
+              Final Score: {finalScore}
+            </span>
+          )}
+          <span>My Computer</span>
+        </div>
       </div>
-    </div>
+
+      {/* Minigame Overlay */}
+      {isMinigameActive && (
+        <BugMinigame
+          isActive={isMinigameActive}
+          onClose={handleCloseMinigame}
+          containerWidth={520} // Approximate explorer content width
+          containerHeight={400} // Approximate explorer content height
+          onScoreChange={handleScoreChange}
+          onTimeChange={handleTimeChange}
+          onGameEnd={handleGameEnd}
+        />
+      )}
+      </div>
+    </>
   )
 }
