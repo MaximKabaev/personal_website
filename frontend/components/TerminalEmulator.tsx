@@ -545,10 +545,6 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
             autoComplete="off"
             spellCheck={false}
           />
-          <span
-            className="ml-1 inline-block w-[2px] h-[1em] bg-current animate-pulse"
-            style={{ verticalAlign: 'text-bottom', transform: 'translateY(-0.18em)' }}
-          />
         </div>
         
         {/* Completion options */}
