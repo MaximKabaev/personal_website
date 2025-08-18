@@ -242,6 +242,15 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
     // Handle executable files (like play.sh)
     if (node.type === 'executable') {
       if (node.name === 'play.sh') {
+        // Check if mobile/small screen
+        if (window.innerWidth < 768) {
+          addToTerminal({ type: 'error', content: 'ERROR: Incompatible display detected' })
+          addToTerminal({ type: 'error', content: `play.sh: requires minimum screen width of 768px` })
+          addToTerminal({ type: 'error', content: `Current resolution: ${window.innerWidth}px` })
+          addToTerminal({ type: 'error', content: 'Please use a desktop or tablet device to run this application.' })
+          return true
+        }
+        
         addToTerminal({ type: 'output', content: 'Launching Bug Hunt v1.0...' })
         addToTerminal({ type: 'output', content: 'Loading game assets...' })
         setTimeout(() => {
