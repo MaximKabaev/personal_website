@@ -24,20 +24,20 @@ export default function InlineMobileMenu({ isDev, onReset, onClose }: Props) {
 
   return (
     <div className="flex items-center justify-between w-full h-12">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-md transition-colors"
+          className="flex items-center gap-1 px-2 py-1 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-md transition-colors"
         >
           {resolvedTheme === 'dark' ? (
             <>
-              <Moon className="w-4 h-4 text-white" />
+              <Moon className="w-3 h-3 text-white" />
               <span className="text-xs text-white">Dark</span>
             </>
           ) : (
             <>
-              <Sun className="w-4 h-4 text-white" />
+              <Sun className="w-3 h-3 text-white" />
               <span className="text-xs text-white">Light</span>
             </>
           )}
@@ -47,17 +47,17 @@ export default function InlineMobileMenu({ isDev, onReset, onClose }: Props) {
         {isDev !== null && (
           <button
             onClick={onReset}
-            className="px-3 py-1 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-md transition-colors text-xs text-white"
+            className="px-2 py-1 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-md transition-colors text-xs text-white whitespace-nowrap"
           >
-            Mode Selection
+            [exit]
           </button>
         )}
       </div>
-
+      
       {/* Close Button */}
       <button
         onClick={onClose}
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
       >
         <X className="w-4 h-4 text-white" />
       </button>
