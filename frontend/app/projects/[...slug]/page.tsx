@@ -7,6 +7,8 @@ import ClientThemeToggle from "@/components/ClientThemeToggle"
 import { DevlogImageGallery } from "@/components/DevlogImage"
 import { formatDate, formatTime } from "@/lib/utils"
 
+export const dynamic = 'force-dynamic'
+
 interface ProjectPageProps {
   params: Promise<{
     slug: string[]
@@ -16,8 +18,8 @@ interface ProjectPageProps {
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const resolvedParams = await params
   let project = null
-  let entries = []
-  
+  let entries = [] as any[]
+
   try {
     // Check if it's a nested route (folder/project) or direct route (project)
     if (resolvedParams.slug.length === 2) {
