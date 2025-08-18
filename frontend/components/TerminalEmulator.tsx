@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
 import { FileSystem } from "@/lib/fileSystem"
+import TerminalBugGame from "./TerminalBugGame"
 
 type Props = {
   projects: any[]
@@ -40,6 +41,7 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
   const [currentCommand, setCurrentCommand] = useState("")
   const [completionOptions, setCompletionOptions] = useState<string[]>([])
   const [showCompletions, setShowCompletions] = useState(false)
+  const [showMinigame, setShowMinigame] = useState(false)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -145,7 +147,11 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
   }
 
   const handlePwd = () => {
-    addToTerminal({ type: 'output', content: `/${currentPath.join('/')}` })
+    if (currentPath.length === 0) {
+      addToTerminal({ type: 'output', content: '/' })
+    } else {
+      addToTerminal({ type: 'output', content: `/${currentPath.join('/')}` })
+    }
   }
 
   const handleLs = (path?: string) => {
@@ -172,6 +178,12 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
   }
 
   const handleCd = (path: string) => {
+    // Handle root directory
+    if (path === '/') {
+      setCurrentPath([])
+      return
+    }
+
     // Handle home directory shortcuts
     if (path === '~' || path === '~/' || path === '') {
       setCurrentPath(['usr', 'maxim'])
@@ -203,6 +215,11 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       }
       return
     }
+    
+    if (node?.type === 'executable') {
+      addToTerminal({ type: 'error', content: `cd: not a directory: ${path}` })
+      return
+    }
 
     setCurrentPath(resolved)
   }
@@ -218,7 +235,25 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
     }
 
     const node = fileSystem.getNode(resolved)
-    if (!node || node.type !== 'file') {
+    if (!node) {
+      return false
+    }
+
+    // Handle executable files (like play.sh)
+    if (node.type === 'executable') {
+      if (node.name === 'play.sh') {
+        addToTerminal({ type: 'output', content: 'Launching Bug Hunt v1.0...' })
+        addToTerminal({ type: 'output', content: 'Loading game assets...' })
+        setTimeout(() => {
+          setShowMinigame(true)
+        }, 1000)
+        return true
+      }
+      return false
+    }
+
+    // Handle project files
+    if (node.type !== 'file') {
       return false
     }
 
@@ -297,7 +332,7 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       '  pwd              - print working directory',
       '  ls [path]        - list directory contents',
       '  cd [path]        - change directory',
-      '  cd ..            - go up one directory',
+      '  cd ..            - go up one directory',  
       '  cat [file]       - display project information',
       '  clear            - clear terminal',
       '  quit             - exit',
@@ -306,6 +341,9 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       'To open the project page:',
       '  cd [filename]       - open project',
       '  cd [path to filename]     - open project (relative)',
+      '',
+      'To execute files:',
+      '  ./[filename]        - execute file (try /play.sh)',
       '',
       'Use arrow keys to navigate command history',
       'Use Tab key for auto-completion'
@@ -328,6 +366,17 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       // Redirect to blank page
       window.location.href = 'about:blank'
     }, 500)
+  }
+
+  const handleMinigameClose = () => {
+    setShowMinigame(false)
+    addToTerminal({ type: 'output', content: 'Bug Hunt session terminated.' })
+    addToTerminal({ type: 'output', content: 'Returning to shell...' })
+  }
+
+  const handleMinigameEnd = (finalScore: number) => {
+    setShowMinigame(false)
+    addToTerminal({ type: 'output', content: `Bug Hunt completed! Final score: ${finalScore}` })
   }
 
   const getCompletions = (partial: string): string[] => {
@@ -514,6 +563,13 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
           </div>
         )}
       </div>
+
+      {/* Terminal Bug Game Overlay */}
+      <TerminalBugGame
+        isActive={showMinigame}
+        onClose={handleMinigameClose}
+        onGameEnd={handleMinigameEnd}
+      />
     </div>
   )
 }
