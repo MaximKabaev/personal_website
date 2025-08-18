@@ -32,6 +32,15 @@ type WindowState = {
   isMinimized: boolean
   isMaximized: boolean
   isVisible: boolean
+  mode: 'normal' | 'small' | 'maximized'
+}
+
+type SavedWindowState = {
+  x: number
+  y: number
+  width: number
+  height: number
+  mode: 'normal' | 'small'
 }
 
 export default function WindowsDesktop({ projects, folders, onReloadStateChange }: Props) {
@@ -42,7 +51,16 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
     height: 0, // Will be set dynamically
     isMinimized: false,
     isMaximized: false,
-    isVisible: true
+    isVisible: true,
+    mode: 'normal'
+  })
+  
+  const [savedWindowState, setSavedWindowState] = useState<SavedWindowState>({
+    x: 20,
+    y: 20,
+    width: 800,
+    height: 600,
+    mode: 'normal'
   })
 
   const [isDragging, setIsDragging] = useState(false)
@@ -62,11 +80,23 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
       const desktopWidth = rect.width || 1000
       const desktopHeight = rect.height || 600
       
+      const initialWidth = Math.max(desktopWidth - 40, 800)
+      const initialHeight = Math.max(desktopHeight - 40, 500)
+      
       setWindowState(prev => ({
         ...prev,
-        width: Math.max(desktopWidth - 40, 800), // Leave 20px margin on each side
-        height: Math.max(desktopHeight - 40, 500) // Leave 20px margin on top and bottom
+        width: initialWidth,
+        height: initialHeight
       }))
+      
+      // Also save as initial saved state
+      setSavedWindowState({
+        x: 20,
+        y: 20,
+        width: initialWidth,
+        height: initialHeight,
+        mode: 'normal'
+      })
     }
   }, [])
 
@@ -108,7 +138,22 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
         const newX = Math.max(-windowState.width + 50, Math.min(dragStart.windowX + deltaX, desktopRect.width - 50))
         const newY = Math.max(0, Math.min(dragStart.windowY + deltaY, desktopRect.height - 100))
         
-        setWindowState(prev => ({ ...prev, x: newX, y: newY }))
+        setWindowState(prev => ({ 
+          ...prev, 
+          x: newX, 
+          y: newY,
+          mode: prev.isMaximized ? prev.mode : 'small' // Only switch to small if not maximized
+        }))
+        
+        // Save the new position if not maximized
+        if (!windowState.isMaximized) {
+          setSavedWindowState(prev => ({
+            ...prev,
+            x: newX,
+            y: newY,
+            mode: 'small'
+          }))
+        }
       }
     }
     
@@ -163,8 +208,19 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
         x: newX,
         y: newY,
         width: newWidth,
-        height: newHeight
+        height: newHeight,
+        mode: 'small', // Switch to small mode when manually resized
+        isMaximized: false
       }))
+      
+      // Save the new state as user's preferred state
+      setSavedWindowState({
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+        mode: 'small'
+      })
     }
   }
 
@@ -180,18 +236,29 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
 
   const handleMaximize = () => {
     if (windowState.isMaximized) {
-      // Restore to previous size, or calculate if first time
-      const desktopWidth = desktopRef.current?.getBoundingClientRect().width || 1000
-      const desktopHeight = desktopRef.current?.getBoundingClientRect().height || 600
+      // Restore to saved user state
       setWindowState(prev => ({ 
         ...prev, 
         isMaximized: false, 
-        x: 20, 
-        y: 20, 
-        width: Math.max(desktopWidth - 40, 800), 
-        height: Math.max(desktopHeight - 40, 500) 
+        x: savedWindowState.x, 
+        y: savedWindowState.y, 
+        width: savedWindowState.width, 
+        height: savedWindowState.height,
+        mode: savedWindowState.mode
       }))
     } else {
+      // Save current state before maximizing (only if not already saved from a manual resize/move)
+      if (windowState.mode === 'normal') {
+        setSavedWindowState({
+          x: windowState.x,
+          y: windowState.y,
+          width: windowState.width,
+          height: windowState.height,
+          mode: windowState.mode
+        })
+      }
+      
+      // Maximize to full desktop
       const desktopWidth = desktopRef.current?.getBoundingClientRect().width || 1000
       const desktopHeight = desktopRef.current?.getBoundingClientRect().height || 600
       setWindowState(prev => ({ 
@@ -200,7 +267,8 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
         x: 0, 
         y: 0, 
         width: desktopWidth, 
-        height: desktopHeight 
+        height: desktopHeight,
+        mode: 'maximized'
       }))
     }
   }

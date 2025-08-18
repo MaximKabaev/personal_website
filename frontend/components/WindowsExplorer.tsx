@@ -240,13 +240,14 @@ export default function WindowsExplorer({
         {/* Address Bar */}
         <div className="flex-1 mx-3">
           <div className="bg-white dark:bg-[#1e1e1e] border border-gray-400 dark:border-gray-600 px-3 py-1 text-sm rounded-sm">
-            <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300 overflow-hidden">
               {currentPath.map((segment, index) => (
                 <React.Fragment key={index}>
-                  {index > 0 && <ChevronRight className="w-3 h-3 text-gray-500" />}
+                  {index > 0 && <ChevronRight className="w-3 h-3 text-gray-500 flex-shrink-0" />}
                   <span 
-                    className="hover:underline cursor-pointer hover:text-blue-600"
+                    className="hover:underline cursor-pointer hover:text-blue-600 whitespace-nowrap overflow-hidden text-ellipsis"
                     onClick={() => handlePathSegmentClick(index)}
+                    title={segment}
                   >
                     {segment}
                   </span>
