@@ -30,6 +30,11 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
       <>
         <section className="mb-12">
           <div className="font-mono text-sm">
+            <div className="flex items-center mb-2">
+              <span className="text-blue-500 dark:text-white mr-1">/usr/maxim</span>
+              <span className="text-muted-foreground mr-1">$</span>
+              <span>tree /usr/maxim</span>
+            </div>
             <div className="text-muted-foreground mb-2">/usr/maxim</div>
             <div className="ml-4">
               <div className="text-muted-foreground mb-2">└─ projects</div>

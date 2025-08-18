@@ -33,6 +33,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
     } else {
       // No choice made yet - reset animation flag for dev prompt
       sessionStorage.removeItem("animationShown")
+      setSkipAnimation(false)
     }
     
     setIsLoading(false)
@@ -40,6 +41,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
 
   const handleSelection = (isDevMode: boolean) => {
     setIsDev(isDevMode)
+    localStorage.setItem("isDev", String(isDevMode))
+    // Reset animation flag when making a new selection
+    sessionStorage.removeItem("animationShown")
+    setSkipAnimation(false)
   }
 
   const resetPreference = () => {
@@ -107,7 +112,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
             <div className="h-4 bg-muted rounded w-3/4"></div>
           </div>
         ) : isDev === null ? (
-          // Show prompt
+          // Show prompt - animations should play after selection
           <section className="mb-12">
             <DevPrompt onSelection={handleSelection} />
           </section>
@@ -117,6 +122,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
             // Skip animations when returning from navigation
             <>
               <section className="mb-12">
+                <div className="font-mono text-sm mb-2">
+                  <span className="text-muted-foreground mr-1">$</span>
+                  <span>whoami</span>
+                </div>
                 <p className="text-muted-foreground leading-relaxed">
                   hi. im maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
                   devlog where i document progress, thoughts, and learnings from various projects. each entry includes
@@ -127,6 +136,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
               <DevTerminalSection projects={projects} folders={folders} skipAnimation={true} />
 
               <section>
+                <div className="font-mono text-sm mb-2">
+                  <span className="text-muted-foreground mr-1">$</span>
+                  <span>finger maxim</span>
+                </div>
                 <div>
                   <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. always open to discuss anything.</p>
                 </div>
