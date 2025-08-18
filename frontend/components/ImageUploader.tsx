@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Upload, X, AlertCircle, Check, Loader2, Image as ImageIcon } from 'lucide-react'
 import { storageService } from '@/lib/storage'
 import type { DevlogImage } from '@/lib/api'
@@ -30,6 +30,15 @@ export default function ImageUploader({
   const [uploadState, setUploadState] = useState<UploadState>({ uploading: false, progress: 0 })
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync internal state with prop changes
+  useEffect(() => {
+    setImages(initialImages)
+    // Clear any error states when images are reset externally
+    if (initialImages.length === 0) {
+      setUploadState({ uploading: false, progress: 0 })
+    }
+  }, [initialImages])
 
   const updateImages = useCallback((newImages: DevlogImage[]) => {
     setImages(newImages)
@@ -206,7 +215,12 @@ export default function ImageUploader({
           <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
           <p className="text-sm text-red-700 dark:text-red-300">{uploadState.error}</p>
           <button
-            onClick={() => setUploadState(prev => ({ ...prev, error: undefined }))}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setUploadState(prev => ({ ...prev, error: undefined }))
+            }}
             className="ml-auto text-red-500 hover:text-red-600"
           >
             <X className="w-4 h-4" />
@@ -239,7 +253,9 @@ export default function ImageUploader({
               {/* Remove Button */}
               {!disabled && (
                 <button
+                  type="button"
                   onClick={(e) => {
+                    e.preventDefault()
                     e.stopPropagation()
                     removeImage(image)
                   }}

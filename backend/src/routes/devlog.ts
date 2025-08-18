@@ -167,18 +167,26 @@ router.get('/:id', async (req, res) => {
 // Create new devlog entry (protected)
 router.post('/', protectRoute, async (req, res) => {
   try {
-    const { project_id, title, content, entry_type, tags, images } = req.body;
+    const { project_id, title, content, entry_type, tags, images, created_at } = req.body;
     
     if (!project_id || !title || !content) {
       return res.status(400).json({ error: 'project_id, title, and content are required' });
     }
     
-    const entry = await queryOne<DevlogEntry>(
-      `INSERT INTO devlog_entries (project_id, title, content, entry_type, tags, images)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [project_id, title, content, entry_type || 'progress', tags || [], JSON.stringify(images || [])]
-    );
+    // If custom created_at is provided, use it, otherwise let database use default (NOW())
+    const entry = created_at 
+      ? await queryOne<DevlogEntry>(
+          `INSERT INTO devlog_entries (project_id, title, content, entry_type, tags, images, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING *`,
+          [project_id, title, content, entry_type || 'progress', tags || [], JSON.stringify(images || []), created_at]
+        )
+      : await queryOne<DevlogEntry>(
+          `INSERT INTO devlog_entries (project_id, title, content, entry_type, tags, images)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [project_id, title, content, entry_type || 'progress', tags || [], JSON.stringify(images || [])]
+        );
     
     res.status(201).json(entry);
   } catch (error) {
@@ -194,7 +202,7 @@ router.put('/:id', protectRoute, async (req, res) => {
     const updates = req.body;
     
     // Build dynamic UPDATE query
-    const updateFields = Object.keys(updates).filter(key => key !== 'id' && key !== 'project_id' && key !== 'created_at' && key !== 'updated_at');
+    const updateFields = Object.keys(updates).filter(key => key !== 'id' && key !== 'project_id' && key !== 'updated_at');
     if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
@@ -204,6 +212,10 @@ router.put('/:id', protectRoute, async (req, res) => {
       // Special handling for images field to ensure proper JSON serialization
       if (field === 'images' && Array.isArray(updates[field])) {
         return JSON.stringify(updates[field]);
+      }
+      // Special handling for created_at to ensure proper timestamp format
+      if (field === 'created_at' && updates[field]) {
+        return new Date(updates[field]).toISOString();
       }
       return updates[field];
     })];

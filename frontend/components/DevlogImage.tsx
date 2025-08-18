@@ -38,7 +38,7 @@ function Lightbox({ image, isOpen, onClose, onNext, onPrev, hasNext, hasPrev }: 
 
   return (
     <div 
-      className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/90 z-50 overflow-auto"
       onClick={onClose}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -83,37 +83,14 @@ function Lightbox({ image, isOpen, onClose, onNext, onPrev, hasNext, hasPrev }: 
         </button>
       )}
 
-      <div 
-        className="relative max-w-full max-h-full"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex items-center justify-center min-h-full p-4">
         <img
           src={image.url}
           alt={image.alt_text || image.filename}
-          className="max-w-full max-h-full object-contain"
+          className="max-w-full md:max-w-4xl max-h-[70vh] md:max-h-[65vh] object-contain"
+          onClick={(e) => e.stopPropagation()}
           loading="lazy"
         />
-        
-        {/* Image info */}
-        <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">{image.alt_text || image.filename}</p>
-              <p className="text-sm text-gray-300">
-                {(image.size / 1024).toFixed(1)} KB
-              </p>
-            </div>
-            <a
-              href={image.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open original
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   )

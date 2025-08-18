@@ -80,15 +80,18 @@ function AdminPageContent() {
     title: '',
     content: '',
     entry_type: 'progress' as const,
-    tags: ''
+    tags: '',
+    created_at: ''  // Will be set to current datetime when form loads
   })
   const [newDevlogImages, setNewDevlogImages] = useState<DevlogImage[]>([])
+  const [imageUploaderKey, setImageUploaderKey] = useState(0)
   
   // Edit form states
   const [editFolderData, setEditFolderData] = useState<Partial<Folder>>({})
   const [editProjectData, setEditProjectData] = useState<Partial<Project>>({})
   const [editDevlogData, setEditDevlogData] = useState<Partial<DevlogEntry>>({})
   const [editDevlogImages, setEditDevlogImages] = useState<DevlogImage[]>([])
+  const [editImageUploaderKey, setEditImageUploaderKey] = useState(0)
 
   // Fetch data
   useEffect(() => {
@@ -220,7 +223,8 @@ function AdminPageContent() {
         body: JSON.stringify({
           ...newDevlogEntry,
           tags: newDevlogEntry.tags ? newDevlogEntry.tags.split(',').map(s => s.trim()) : [],
-          images: newDevlogImages
+          images: newDevlogImages,
+          created_at: newDevlogEntry.created_at ? new Date(newDevlogEntry.created_at).toISOString() : undefined
         })
       })
       
@@ -230,14 +234,18 @@ function AdminPageContent() {
       await fetchProjectDevlog(newDevlogEntry.project_id)
       
       // Clear form but keep project selected for convenience
+      const projectId = newDevlogEntry.project_id
       setNewDevlogEntry(prev => ({
-        project_id: prev.project_id,
+        project_id: projectId,
         title: '',
         content: '',
         entry_type: 'progress',
-        tags: ''
+        tags: '',
+        created_at: formatDateTimeForInput()
       }))
+      // Clear images and force ImageUploader to re-render
       setNewDevlogImages([])
+      setImageUploaderKey(prev => prev + 1)
       
       // Expand the project to show the new entry
       setExpandedProjects(prev => new Set(prev).add(newDevlogEntry.project_id))
@@ -330,6 +338,7 @@ function AdminPageContent() {
       setEditingDevlog(null)
       setEditDevlogData({})
       setEditDevlogImages([])
+      setEditImageUploaderKey(prev => prev + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update devlog entry')
     }
@@ -391,6 +400,26 @@ function AdminPageContent() {
   const generateSlug = (name: string) => {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
   }
+
+  // Format datetime for input field (YYYY-MM-DDTHH:mm)
+  const formatDateTimeForInput = (date: Date = new Date()) => {
+    const year = date.getFullYear()
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const day = date.getDate().toString().padStart(2, '0')
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  // Initialize datetime field when component mounts or when starting new devlog
+  useEffect(() => {
+    if (!newDevlogEntry.created_at) {
+      setNewDevlogEntry(prev => ({
+        ...prev,
+        created_at: formatDateTimeForInput()
+      }))
+    }
+  }, [newDevlogEntry.created_at])
 
   return (
     <div className="min-h-screen bg-background text-foreground font-mono">
@@ -982,6 +1011,18 @@ function AdminPageContent() {
                 </div>
                 
                 <div>
+                  <label className="block text-sm text-muted-foreground mb-1">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={newDevlogEntry.created_at}
+                    onChange={(e) => setNewDevlogEntry({ ...newDevlogEntry, created_at: e.target.value })}
+                    className="w-full px-3 py-2 bg-background border border-muted rounded font-mono text-sm"
+                    title="Entry timestamp (defaults to now)"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Leave as-is to use current time, or select a custom date/time</p>
+                </div>
+                
+                <div>
                   <label className="block text-sm text-muted-foreground mb-1">Title *</label>
                   <input
                     type="text"
@@ -1019,6 +1060,7 @@ function AdminPageContent() {
                 <div>
                   <label className="block text-sm text-muted-foreground mb-2">Images</label>
                   <ImageUploader
+                    key={imageUploaderKey}
                     projectId={newDevlogEntry.project_id || 'temp'}
                     initialImages={newDevlogImages}
                     onImagesChange={setNewDevlogImages}
@@ -1083,6 +1125,16 @@ function AdminPageContent() {
                                           className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
                                           placeholder="Title"
                                         />
+                                        <div>
+                                          <label className="block text-sm text-muted-foreground mb-1">Date & Time</label>
+                                          <input
+                                            type="datetime-local"
+                                            value={editDevlogData.created_at ? formatDateTimeForInput(new Date(editDevlogData.created_at)) : ''}
+                                            onChange={(e) => setEditDevlogData({ ...editDevlogData, created_at: e.target.value })}
+                                            className="w-full px-2 py-1 bg-background border border-muted rounded font-mono text-sm"
+                                            title="Entry timestamp"
+                                          />
+                                        </div>
                                         <div className="grid grid-cols-2 gap-2">
                                           <select
                                             value={editDevlogData.entry_type || 'progress'}
@@ -1113,6 +1165,7 @@ function AdminPageContent() {
                                         <div>
                                           <label className="block text-sm text-muted-foreground mb-2">Images</label>
                                           <ImageUploader
+                                            key={editImageUploaderKey}
                                             projectId={project.id}
                                             initialImages={editDevlogImages}
                                             onImagesChange={setEditDevlogImages}
@@ -1132,6 +1185,7 @@ function AdminPageContent() {
                                               setEditingDevlog(null)
                                               setEditDevlogData({})
                                               setEditDevlogImages([])
+                                              setEditImageUploaderKey(prev => prev + 1)
                                             }}
                                             className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
                                           >
@@ -1177,6 +1231,7 @@ function AdminPageContent() {
                                               setEditingDevlog(entry.id)
                                               setEditDevlogData(entry)
                                               setEditDevlogImages(entry.images || [])
+                                              setEditImageUploaderKey(prev => prev + 1)
                                             }}
                                             className="text-blue-400 hover:text-blue-300 transition-colors"
                                           >
