@@ -1,13 +1,15 @@
+'use client'
+
+import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import { getProject, getProjectByPath, getProjectDevlog } from "@/lib/api"
 import { ArrowLeft } from "lucide-react"
 import ClientThemeToggle from "@/components/ClientThemeToggle"
 import { DevlogImageGallery } from "@/components/DevlogImage"
 import { formatDate, formatTime } from "@/lib/utils"
 
-export const dynamic = 'force-dynamic'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
 
 interface ProjectPageProps {
   params: Promise<{
@@ -15,35 +17,63 @@ interface ProjectPageProps {
   }>
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
-  const resolvedParams = await params
-  let project = null
-  let entries = [] as any[]
+export default function ProjectPage({ params }: ProjectPageProps) {
+  const resolvedParams = use(params)
+  const [project, setProject] = useState<any>(null)
+  const [entries, setEntries] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  try {
-    // Check if it's a nested route (folder/project) or direct route (project)
-    if (resolvedParams.slug.length === 2) {
-      // Nested: /projects/folder/project
-      const [folderSlug, projectSlug] = resolvedParams.slug
-      project = await getProjectByPath(folderSlug, projectSlug)
-    } else if (resolvedParams.slug.length === 1) {
-      // Direct: /projects/project (could be ID or slug)
-      const [identifier] = resolvedParams.slug
-      project = await getProject(identifier)
-    } else {
-      // Invalid path
-      notFound()
+  useEffect(() => {
+    async function fetchProjectData() {
+      try {
+        let projectData = null
+        
+        // Check if it's a nested route (folder/project) or direct route (project)
+        if (resolvedParams.slug.length === 2) {
+          // Nested: /projects/folder/project
+          const [folderSlug, projectSlug] = resolvedParams.slug
+          const res = await fetch(`${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`)
+          if (res.ok) {
+            projectData = await res.json()
+          }
+        } else if (resolvedParams.slug.length === 1) {
+          // Direct: /projects/project (could be ID or slug)
+          const [identifier] = resolvedParams.slug
+          const res = await fetch(`${API_URL}/projects/${identifier}`)
+          if (res.ok) {
+            projectData = await res.json()
+          }
+        }
+        
+        if (projectData) {
+          setProject(projectData)
+          
+          // Fetch devlog entries
+          const devlogRes = await fetch(`${API_URL}/devlog/project/${projectData.id}?limit=20&offset=0`)
+          if (devlogRes.ok) {
+            const devlogData = await devlogRes.json()
+            setEntries(devlogData)
+          }
+        } else {
+          setError(true)
+        }
+      } catch (err) {
+        console.error('Failed to fetch project:', err)
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
     }
     
-    if (project) {
-      entries = await getProjectDevlog(project.id)
-    }
-  } catch (error) {
-    console.error('Failed to fetch project:', error)
-    notFound()
+    fetchProjectData()
+  }, [resolvedParams.slug])
+
+  if (loading) {
+    return <div className="min-h-screen bg-background text-foreground font-mono flex items-center justify-center">Loading...</div>
   }
 
-  if (!project) {
+  if (error || !project) {
     notFound()
   }
 
