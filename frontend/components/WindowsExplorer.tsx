@@ -58,6 +58,8 @@ export default function WindowsExplorer({
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set())
+  const [navigationHistory, setNavigationHistory] = useState<Array<{path: string[], folderId: string | null}>>([{path: ['My Computer', 'Projects'], folderId: null}])
+  const [historyIndex, setHistoryIndex] = useState(0)
 
   const handleFolderClick = (folderId: string) => {
     const newOpenFolders = new Set(openFolders)
@@ -80,6 +82,14 @@ export default function WindowsExplorer({
     setSelectedItems(newSelected)
   }
 
+  const addToNavigationHistory = (path: string[], folderId: string | null) => {
+    // Remove any forward history when navigating to a new location
+    const newHistory = navigationHistory.slice(0, historyIndex + 1)
+    newHistory.push({ path, folderId })
+    setNavigationHistory(newHistory)
+    setHistoryIndex(newHistory.length - 1)
+  }
+
   const handleDoubleClick = (itemId: string, itemType: 'folder' | 'project') => {
     if (itemType === 'folder') {
       const folderId = itemId.replace('folder-', '')
@@ -87,8 +97,10 @@ export default function WindowsExplorer({
       
       // Navigate into the folder
       if (folder) {
+        const newPath = ['My Computer', 'Projects', folder.name]
         setCurrentFolderId(folderId)
-        setCurrentPath(['My Computer', 'Projects', folder.name])
+        setCurrentPath(newPath)
+        addToNavigationHistory(newPath, folderId)
         // Also expand it in the tree
         handleFolderClick(folderId)
       }
@@ -96,9 +108,23 @@ export default function WindowsExplorer({
   }
 
   const handleBackNavigation = () => {
-    if (currentFolderId !== null) {
-      setCurrentFolderId(null)
-      setCurrentPath(['My Computer', 'Projects'])
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1
+      const historyItem = navigationHistory[newIndex]
+      setCurrentFolderId(historyItem.folderId)
+      setCurrentPath(historyItem.path)
+      setHistoryIndex(newIndex)
+      setSelectedItems(new Set())
+    }
+  }
+
+  const handleForwardNavigation = () => {
+    if (historyIndex < navigationHistory.length - 1) {
+      const newIndex = historyIndex + 1
+      const historyItem = navigationHistory[newIndex]
+      setCurrentFolderId(historyItem.folderId)
+      setCurrentPath(historyItem.path)
+      setHistoryIndex(newIndex)
       setSelectedItems(new Set())
     }
   }
@@ -106,8 +132,10 @@ export default function WindowsExplorer({
   const handlePathSegmentClick = (segmentIndex: number) => {
     if (segmentIndex === 0 || segmentIndex === 1) {
       // Clicked on "My Computer" or "Projects" - go to root
+      const newPath = ['My Computer', 'Projects']
       setCurrentFolderId(null)
-      setCurrentPath(['My Computer', 'Projects'])
+      setCurrentPath(newPath)
+      addToNavigationHistory(newPath, null)
       setSelectedItems(new Set())
     } else if (segmentIndex === 2 && currentPath.length === 3) {
       // Clicked on folder name when we're inside it - do nothing (already there)
@@ -190,17 +218,20 @@ export default function WindowsExplorer({
       <div className="bg-[#ece9d8] dark:bg-[#3c3c3c] border-b border-gray-400 dark:border-gray-600 px-2 py-1 flex items-center gap-2">
         <button 
           onClick={handleBackNavigation}
-          disabled={currentFolderId === null}
+          disabled={historyIndex <= 0}
           className={`p-1 hover:bg-[#316ac5] hover:text-white rounded-sm ${
-            currentFolderId === null ? 'opacity-50 cursor-not-allowed' : ''
+            historyIndex <= 0 ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           title="Back"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button 
-          disabled={true}
-          className="p-1 opacity-50 cursor-not-allowed rounded-sm"
+          onClick={handleForwardNavigation}
+          disabled={historyIndex >= navigationHistory.length - 1}
+          className={`p-1 hover:bg-[#316ac5] hover:text-white rounded-sm ${
+            historyIndex >= navigationHistory.length - 1 ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           title="Forward"
         >
           <ChevronRight className="w-5 h-5" />
@@ -322,8 +353,10 @@ export default function WindowsExplorer({
                     key={folder.id}
                     onClick={() => handleItemSelect(`folder-${folder.id}`)}
                     onDoubleClick={() => handleDoubleClick(`folder-${folder.id}`, 'folder')}
-                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 ${
-                      isSelected ? 'bg-[#316ac5] text-white' : 'text-black dark:text-gray-200'
+                    className={`flex items-center gap-3 p-2 cursor-pointer ${
+                      isSelected 
+                        ? 'bg-[#316ac5] text-white hover:bg-[#316ac5] hover:text-white' 
+                        : 'text-black dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-800'
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
                     <Folder className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-yellow-600 dark:text-yellow-400`} />
@@ -357,8 +390,10 @@ export default function WindowsExplorer({
                     key={project.id}
                     href={currentFolderId ? `/projects/${folders.find(f => f.id === currentFolderId)?.slug}/${project.slug}` : `/projects/${project.slug}`}
                     onClick={() => handleItemSelect(`project-${project.id}`)}
-                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 ${
-                      isSelected ? 'bg-[#316ac5] text-white' : 'text-black dark:text-gray-200'
+                    className={`flex items-center gap-3 p-2 cursor-pointer ${
+                      isSelected 
+                        ? 'bg-[#316ac5] text-white hover:bg-[#316ac5] hover:text-white' 
+                        : 'text-black dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-800'
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
                     <FileText className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-blue-600 dark:text-blue-400`} />
