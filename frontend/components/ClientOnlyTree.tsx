@@ -1,15 +1,15 @@
 "use client"
 import React from "react"
 import TerminalReveal from "./TerminalReveal"
-import Link from "next/link"
 
 type Props = {
   projects: any[]
   folders: any[]
   onComplete?: () => void
+  onProjectClick?: (path: string) => void
 }
 
-export default function ClientOnlyTerminal({ projects, folders, onComplete }: Props) {
+export default function ClientOnlyTerminal({ projects, folders, onComplete, onProjectClick }: Props) {
   return (
   <TerminalReveal sequential onComplete={onComplete}>
       <div className="font-mono text-sm">
@@ -35,12 +35,17 @@ export default function ClientOnlyTerminal({ projects, folders, onComplete }: Pr
                             <span className="text-muted-foreground">
                               {projectIndex === folderProjects.length - 1 ? '└─' : '├─'}
                             </span>
-                            <Link
-                              href={`/projects/${folder.slug}/${project.slug}`}
-                              className="text-foreground hover:text-primary underline transition-colors"
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                if (onProjectClick) {
+                                  onProjectClick(`projects/${folder.slug}/${project.slug}`)
+                                }
+                              }}
+                              className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
                             >
                               {project.name}
-                            </Link>
+                            </button>
                             <span className="text-muted-foreground text-xs">({project.status})</span>
                           </div>
                         ))}
@@ -62,12 +67,17 @@ export default function ClientOnlyTerminal({ projects, folders, onComplete }: Pr
                   return (
                     <div key={project.id} className="flex items-center gap-2">
                       <span className="text-muted-foreground">{isLast ? '└─' : '├─'}</span>
-                      <Link
-                        href={`/projects/${project.slug}`}
-                        className="text-foreground hover:text-primary underline transition-colors"
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (onProjectClick) {
+                            onProjectClick(project.slug)
+                          }
+                        }}
+                        className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
                       >
                         {project.name}
-                      </Link>
+                      </button>
                       <span className="text-muted-foreground text-xs">({project.status})</span>
                     </div>
                   )

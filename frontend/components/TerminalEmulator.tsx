@@ -7,6 +7,7 @@ type Props = {
   projects: any[]
   folders: any[]
   onReady?: () => void
+  commandRef?: React.MutableRefObject<((command: string, autoExecute?: boolean) => void) | null>
 }
 
 type TerminalLine = {
@@ -14,7 +15,7 @@ type TerminalLine = {
   content: string
 }
 
-export default function TerminalEmulator({ projects, folders, onReady }: Props) {
+export default function TerminalEmulator({ projects, folders, onReady, commandRef }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileSystem] = useState(() => new FileSystem(projects, folders))
@@ -29,7 +30,21 @@ export default function TerminalEmulator({ projects, folders, onReady }: Props) 
   useEffect(() => {
     inputRef.current?.focus()
     onReady?.()
-  }, [onReady])
+    
+    // Expose setCommand and executeCommand functions
+    if (commandRef) {
+      commandRef.current = (command: string, autoExecute: boolean = false) => {
+        setCurrentCommand(command)
+        inputRef.current?.focus()
+        if (autoExecute) {
+          // Execute the command after a brief delay to show it being typed
+          setTimeout(() => {
+            executeCommand(command)
+          }, 100)
+        }
+      }
+    }
+  }, [onReady, commandRef])
 
   const getPrompt = () => {
     const path = currentPath.join('/')

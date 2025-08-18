@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import ClientOnlyTree from "./ClientOnlyTree"
 import TerminalEmulator from "./TerminalEmulator"
 
@@ -11,9 +11,17 @@ type Props = {
 
 export default function DevTerminalSection({ projects, folders, skipAnimation = false }: Props) {
   const [showTerminal, setShowTerminal] = useState(skipAnimation)
+  const setCommandRef = useRef<((command: string, autoExecute?: boolean) => void) | null>(null)
   
   const handleTreeComplete = () => {
     setShowTerminal(true)
+  }
+  
+  const handleProjectClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault()
+    if (setCommandRef.current) {
+      setCommandRef.current(`nano ~/${path}`, true) // true = auto-execute
+    }
   }
 
   if (skipAnimation) {
@@ -44,7 +52,12 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
                                 <span className="text-muted-foreground">
                                   {projectIndex === folderProjects.length - 1 ? '└─' : '├─'}
                                 </span>
-                                <span className="text-foreground">{project.name}</span>
+                                <button
+                                  onClick={(e) => handleProjectClick(e, `projects/${folder.slug}/${project.slug}`)}
+                                  className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
+                                >
+                                  {project.name}
+                                </button>
                                 <span className="text-muted-foreground text-xs">({project.status})</span>
                               </div>
                             ))}
@@ -66,7 +79,12 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
                       return (
                         <div key={project.id} className="flex items-center gap-2">
                           <span className="text-muted-foreground">{isLast ? '└─' : '├─'}</span>
-                          <span className="text-foreground">{project.name}</span>
+                          <button
+                            onClick={(e) => handleProjectClick(e, project.slug)}
+                            className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
+                          >
+                            {project.name}
+                          </button>
                           <span className="text-muted-foreground text-xs">({project.status})</span>
                         </div>
                       )
@@ -84,7 +102,7 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
         </section>
 
         <section className="mb-12">
-          <TerminalEmulator projects={projects} folders={folders} />
+          <TerminalEmulator projects={projects} folders={folders} commandRef={setCommandRef} />
         </section>
       </>
     )
@@ -93,12 +111,21 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
   return (
     <>
       <section className="mb-12">
-        <ClientOnlyTree projects={projects} folders={folders} onComplete={handleTreeComplete} />
+        <ClientOnlyTree 
+          projects={projects} 
+          folders={folders} 
+          onComplete={handleTreeComplete}
+          onProjectClick={(path) => {
+            if (setCommandRef.current) {
+              setCommandRef.current(`nano ~/${path}`, true) // true = auto-execute
+            }
+          }}
+        />
       </section>
 
       {showTerminal && (
         <section className="mb-12 animate-fadeIn">
-          <TerminalEmulator projects={projects} folders={folders} />
+          <TerminalEmulator projects={projects} folders={folders} commandRef={setCommandRef} />
         </section>
       )}
     </>

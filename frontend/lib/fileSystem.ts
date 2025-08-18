@@ -104,6 +104,18 @@ export class FileSystem {
   }
 
   resolvePath(currentPath: string[], targetPath: string): string[] | null {
+    // Handle home directory paths
+    if (targetPath.startsWith('~/')) {
+      targetPath = targetPath.slice(2) // Remove ~/
+      const homePath = ['usr', 'maxim']
+      if (!targetPath) {
+        return homePath
+      }
+      // Continue with relative path from home
+      currentPath = homePath
+      targetPath = targetPath // Use the rest as relative path
+    }
+    
     // Handle absolute paths
     if (targetPath.startsWith('/')) {
       const parts = targetPath.split('/').filter(Boolean)
