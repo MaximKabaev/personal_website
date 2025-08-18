@@ -10,6 +10,7 @@ type Props = {
   children?: React.ReactNode
   sequential?: boolean
   showLeadingPrompt?: boolean
+  onComplete?: () => void
 }
 
 export default function TerminalReveal({
@@ -20,6 +21,7 @@ export default function TerminalReveal({
   children,
   sequential = false,
   showLeadingPrompt = true,
+  onComplete,
 }: Props) {
   const [typed, setTyped] = useState("")
   const [show, setShow] = useState(false)
@@ -53,7 +55,10 @@ export default function TerminalReveal({
         i++
         if (i === command.length) {
           if (intervalRef.current) clearInterval(intervalRef.current)
-          setTimeout(() => setShow(true), pauseAfter)
+          setTimeout(() => {
+            setShow(true)
+            onComplete?.()
+          }, pauseAfter)
         }
       }, typingSpeed)
     }, startDelay)

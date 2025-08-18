@@ -9,6 +9,7 @@ import DevTerminalSection from "./DevTerminalSection"
 import { TerminalSequenceProvider } from "./TerminalSequence"
 import Link from "next/link"
 import WindowsFolder from "./WindowsFolder"
+import AnimationTracker from "./AnimationTracker"
 
 type Props = {
   projects: any[]
@@ -18,13 +19,22 @@ type Props = {
 export default function LandingWrapper({ projects, folders }: Props) {
   const [isDev, setIsDev] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [skipAnimation, setSkipAnimation] = useState(false)
 
   useEffect(() => {
     // Check if user has already made a choice
     const stored = localStorage.getItem("isDev")
     if (stored !== null) {
       setIsDev(stored === "true")
+      
+      // Check if animations have been shown already in this session
+      const animationShown = sessionStorage.getItem("animationShown")
+      setSkipAnimation(animationShown === "true")
+    } else {
+      // No choice made yet - reset animation flag for dev prompt
+      sessionStorage.removeItem("animationShown")
     }
+    
     setIsLoading(false)
   }, [])
 
@@ -34,6 +44,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
 
   const resetPreference = () => {
     localStorage.removeItem("isDev")
+    sessionStorage.removeItem("animationShown")
     setIsDev(null)
   }
 
@@ -98,17 +109,40 @@ export default function LandingWrapper({ projects, folders }: Props) {
           </section>
         ) : isDev ? (
           // Show terminal style content
-          <TerminalSequenceProvider>
-            <section className="mb-12">
-              <ClientOnlyWhoami />
-            </section>
+          skipAnimation ? (
+            // Skip animations when returning from navigation
+            <>
+              <section className="mb-12">
+                <p className="text-muted-foreground leading-relaxed">
+                  hi. im maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
+                  devlog where i document progress, thoughts, and learnings from various projects. each entry includes
+                  timestamps and personal reflections on the development process.
+                </p>
+              </section>
 
-            <DevTerminalSection projects={projects} folders={folders} />
+              <DevTerminalSection projects={projects} folders={folders} skipAnimation={true} />
 
-            <section>
-              <ClientOnlyFinger />
-            </section>
-          </TerminalSequenceProvider>
+              <section>
+                <div>
+                  <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. always open to discuss anything.</p>
+                </div>
+              </section>
+            </>
+          ) : (
+            // Show animations on first load
+            <TerminalSequenceProvider>
+              <AnimationTracker />
+              <section className="mb-12">
+                <ClientOnlyWhoami />
+              </section>
+
+              <DevTerminalSection projects={projects} folders={folders} />
+
+              <section>
+                <ClientOnlyFinger />
+              </section>
+            </TerminalSequenceProvider>
+          )
         ) : (
           // Show normal style content
           <>

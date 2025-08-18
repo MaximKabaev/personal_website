@@ -6,11 +6,12 @@ import Link from "next/link"
 type Props = {
   projects: any[]
   folders: any[]
+  onComplete?: () => void
 }
 
-export default function ClientOnlyTerminal({ projects, folders }: Props) {
+export default function ClientOnlyTerminal({ projects, folders, onComplete }: Props) {
   return (
-  <TerminalReveal sequential>
+  <TerminalReveal sequential onComplete={onComplete}>
       <div className="font-mono text-sm">
         <div className="text-muted-foreground mb-2">/usr/maxim</div>
         <div className="ml-4">
