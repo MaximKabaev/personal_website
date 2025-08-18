@@ -1,17 +1,44 @@
-import { getProjects, getFolderTree } from "@/lib/api"
+'use client'
+
+import { useState, useEffect } from 'react'
 import LandingWrapper from "@/components/LandingWrapper"
 
-export default async function HomePage() {
-  let projects = [] as any[]
-  let folders = [] as any[]
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
 
-  try {
-    [projects, folders] = await Promise.all([
-      getProjects(),
-      getFolderTree()
-    ])
-  } catch (error) {
-    console.error('Failed to fetch data:', error)
+export default function HomePage() {
+  const [projects, setProjects] = useState<any[]>([])
+  const [folders, setFolders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [projectsRes, foldersRes] = await Promise.all([
+          fetch(`${API_URL}/projects`),
+          fetch(`${API_URL}/folders/tree`)
+        ])
+        
+        if (projectsRes.ok) {
+          const projectsData = await projectsRes.json()
+          setProjects(projectsData)
+        }
+        
+        if (foldersRes.ok) {
+          const foldersData = await foldersRes.json()
+          setFolders(foldersData)
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return <div>Loading...</div>
   }
 
   return <LandingWrapper projects={projects} folders={folders} />
