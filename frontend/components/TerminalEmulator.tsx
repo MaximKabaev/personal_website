@@ -19,11 +19,25 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileSystem] = useState(() => new FileSystem(projects, folders))
-  const [currentPath, setCurrentPath] = useState<string[]>(['usr', 'maxim'])
-  const [commandHistory, setCommandHistory] = useState<string[]>([])
+  
+  // Load saved state from session storage
+  const [currentPath, setCurrentPath] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('terminalPath')
+    return saved ? JSON.parse(saved) : ['usr', 'maxim']
+  })
+  
+  const [commandHistory, setCommandHistory] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('commandHistory')
+    return saved ? JSON.parse(saved) : []
+  })
+  
+  const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>(() => {
+    const saved = sessionStorage.getItem('terminalHistory')
+    return saved ? JSON.parse(saved) : []
+  })
+  
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [currentCommand, setCurrentCommand] = useState("")
-  const [terminalHistory, setTerminalHistory] = useState<TerminalLine[]>([])
   const [completionOptions, setCompletionOptions] = useState<string[]>([])
   const [showCompletions, setShowCompletions] = useState(false)
 
@@ -45,6 +59,19 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       }
     }
   }, [onReady, commandRef])
+
+  // Save state to session storage when it changes
+  useEffect(() => {
+    sessionStorage.setItem('terminalPath', JSON.stringify(currentPath))
+  }, [currentPath])
+
+  useEffect(() => {
+    sessionStorage.setItem('commandHistory', JSON.stringify(commandHistory))
+  }, [commandHistory])
+
+  useEffect(() => {
+    sessionStorage.setItem('terminalHistory', JSON.stringify(terminalHistory))
+  }, [terminalHistory])
 
   const getPrompt = () => {
     const path = currentPath.join('/')
@@ -85,6 +112,7 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
         break
       case 'clear':
         setTerminalHistory([])
+        sessionStorage.removeItem('terminalHistory') // Also clear from storage
         break
       case 'nano':
         if (args[0]) {

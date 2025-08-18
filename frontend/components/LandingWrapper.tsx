@@ -45,6 +45,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
   const resetPreference = () => {
     localStorage.removeItem("isDev")
     sessionStorage.removeItem("animationShown")
+    // Clear terminal state when switching modes
+    sessionStorage.removeItem("terminalHistory")
+    sessionStorage.removeItem("terminalPath")
+    sessionStorage.removeItem("commandHistory")
     setIsDev(null)
   }
 
