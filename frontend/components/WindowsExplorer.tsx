@@ -41,6 +41,7 @@ type Props = {
   onMaximize?: () => void
   onClose?: () => void
   isMaximized?: boolean
+  onMinigameStart?: () => void
 }
 
 type ViewMode = 'list' | 'details' | 'icons'
@@ -52,7 +53,8 @@ export default function WindowsExplorer({
   onMinimize, 
   onMaximize, 
   onClose, 
-  isMaximized = false
+  isMaximized = false,
+  onMinigameStart
 }: Props) {
   const [currentPath, setCurrentPath] = useState<string[]>(['My Computer', 'Projects'])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null) // null means root level
@@ -127,6 +129,7 @@ export default function WindowsExplorer({
       if (itemId === 'play') {
         // Trigger minigame
         setIsMinigameActive(true)
+        onMinigameStart?.()
       }
     }
   }

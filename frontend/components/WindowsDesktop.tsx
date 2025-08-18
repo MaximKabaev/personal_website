@@ -380,6 +380,10 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
             onMaximize={handleMaximize}
             onClose={handleClose}
             isMaximized={windowState.isMaximized}
+            onMinigameStart={() => {
+              setShowReloadButton(true)
+              onReloadStateChange?.(true, handleReloadExplorer)
+            }}
           />
         </div>
       </div>
