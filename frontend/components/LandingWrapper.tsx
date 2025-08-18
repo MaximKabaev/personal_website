@@ -138,7 +138,18 @@ export default function LandingWrapper({ projects, folders }: Props) {
               <section>
                 <div className="font-mono text-sm mb-2">
                   <span className="text-muted-foreground mr-1">$</span>
-                  <span>finger maxim</span>
+                  <span 
+                    className="hover:cursor-pointer"
+                    style={{ cursor: 'default' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'><text y=\'20\' font-size=\'20\'>🤤</text></svg>"), pointer'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.cursor = 'default'
+                    }}
+                  >
+                    finger maxim
+                  </span>
                 </div>
                 <div>
                   <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. always open to discuss anything.</p>
