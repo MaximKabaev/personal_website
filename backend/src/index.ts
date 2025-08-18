@@ -16,7 +16,9 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://maximkabaev.com',
-    'https://www.maximkabaev.com'
+    'https://www.maximkabaev.com',
+    /^https:\/\/.*\.vercel\.app$/,  // Allow all Vercel preview deployments
+    /^https:\/\/.*\.vercel\.sh$/    // Allow Vercel internal domains
   ],
   credentials: true
 }));

@@ -71,7 +71,17 @@ export async function getProject(identifier: string): Promise<Project> {
 }
 
 export async function getProjectByPath(folderSlug: string, projectSlug: string): Promise<Project> {
-  const res = await fetch(`${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`);
+  const res = await fetch(`${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Next.js Server',
+    },
+    // Add cache control to prevent aggressive caching
+    cache: 'no-store',
+    // Add next revalidate to force dynamic fetching
+    next: { revalidate: 0 }
+  });
   if (!res.ok) throw new Error('Failed to fetch project');
   return res.json();
 }
@@ -117,7 +127,15 @@ export async function getRecentEntries(limit = 5): Promise<DevlogEntry[]> {
 }
 
 export async function getProjectDevlog(projectId: string, limit = 20, offset = 0): Promise<DevlogEntry[]> {
-  const res = await fetch(`${API_URL}/devlog/project/${projectId}?limit=${limit}&offset=${offset}`);
+  const res = await fetch(`${API_URL}/devlog/project/${projectId}?limit=${limit}&offset=${offset}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Next.js Server',
+    },
+    cache: 'no-store',
+    next: { revalidate: 0 }
+  });
   if (!res.ok) throw new Error('Failed to fetch project devlog');
   return res.json();
 }
