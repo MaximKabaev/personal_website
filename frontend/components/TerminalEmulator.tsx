@@ -549,8 +549,12 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
             value={currentCommand}
             onChange={(e) => setCurrentCommand(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent outline-none text-foreground text-base"
-            style={{ fontSize: '16px' }}
+            className="flex-1 bg-transparent outline-none text-foreground"
+            style={{ 
+              fontSize: '16px',
+              transform: 'scale(0.875)',
+              transformOrigin: 'left center'
+            }}
             autoComplete="off"
             spellCheck={false}
           />
