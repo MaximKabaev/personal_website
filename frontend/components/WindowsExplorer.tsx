@@ -137,7 +137,7 @@ export default function WindowsExplorer({
   const totalItems = displayItems.folders.length + displayItems.projects.length
 
   return (
-    <div className="bg-[#f0f0f0] border border-gray-400 rounded-sm font-sans h-full w-full overflow-hidden flex flex-col">
+    <div className="bg-[#f0f0f0] dark:bg-[#2d2d30] border border-gray-400 dark:border-gray-600 rounded-sm font-sans h-full w-full overflow-hidden flex flex-col">
       {/* Title Bar */}
       <div 
         className="bg-gradient-to-r from-[#0054e3] to-[#0041ac] text-white px-2 py-1 flex items-center justify-between text-sm cursor-move select-none"
@@ -176,18 +176,18 @@ export default function WindowsExplorer({
       </div>
 
       {/* Menu Bar */}
-      <div className="bg-[#ece9d8] border-b border-gray-400 px-2 py-1 text-sm">
+      <div className="bg-[#ece9d8] dark:bg-[#3c3c3c] border-b border-gray-400 dark:border-gray-600 px-2 py-1 text-sm">
         <div className="flex gap-6">
-          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer">File</span>
-          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer">Edit</span>
-          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer">View</span>
-          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer">Tools</span>
-          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer">Help</span>
+          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer text-black dark:text-gray-200">File</span>
+          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer text-black dark:text-gray-200">Edit</span>
+          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer text-black dark:text-gray-200">View</span>
+          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer text-black dark:text-gray-200">Tools</span>
+          <span className="hover:bg-[#316ac5] hover:text-white px-2 py-1 cursor-pointer text-black dark:text-gray-200">Help</span>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="bg-[#ece9d8] border-b border-gray-400 px-2 py-1 flex items-center gap-2">
+      <div className="bg-[#ece9d8] dark:bg-[#3c3c3c] border-b border-gray-400 dark:border-gray-600 px-2 py-1 flex items-center gap-2">
         <button 
           onClick={handleBackNavigation}
           disabled={currentFolderId === null}
@@ -208,8 +208,8 @@ export default function WindowsExplorer({
         
         {/* Address Bar */}
         <div className="flex-1 mx-3">
-          <div className="bg-white border border-gray-400 px-3 py-1 text-sm rounded-sm">
-            <div className="flex items-center gap-1 text-gray-700">
+          <div className="bg-white dark:bg-[#1e1e1e] border border-gray-400 dark:border-gray-600 px-3 py-1 text-sm rounded-sm">
+            <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
               {currentPath.map((segment, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && <ChevronRight className="w-3 h-3 text-gray-500" />}
@@ -254,10 +254,10 @@ export default function WindowsExplorer({
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Navigation Tree */}
-        <div className="w-1/3 bg-white border-r border-gray-400 p-2 overflow-auto">
-          <div className="text-sm">
-            <div className="flex items-center gap-1 py-1 hover:bg-blue-100 cursor-pointer">
-              <Folder className="w-4 h-4 text-yellow-600" />
+        <div className="w-1/3 bg-white dark:bg-[#252526] border-r border-gray-400 dark:border-gray-600 p-2 overflow-auto">
+          <div className="text-sm text-black dark:text-gray-200">
+            <div className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer">
+              <Folder className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
               <span className="font-medium">Projects</span>
             </div>
             <div className="ml-4 mt-1">
@@ -269,21 +269,21 @@ export default function WindowsExplorer({
                   <div key={folder.id}>
                     <div 
                       onClick={() => handleFolderClick(folder.id)}
-                      className="flex items-center gap-1 py-1 hover:bg-blue-100 cursor-pointer"
+                      className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
                     >
-                      <ChevronRight className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                      <ChevronRight className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''} text-gray-600 dark:text-gray-400`} />
                       {isOpen ? (
-                        <FolderOpen className="w-4 h-4 text-yellow-600" />
+                        <FolderOpen className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                       ) : (
-                        <Folder className="w-4 h-4 text-yellow-600" />
+                        <Folder className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                       )}
                       <span>{folder.name}</span>
                     </div>
                     {isOpen && (
                       <div className="ml-6">
                         {folderProjects.map((project) => (
-                          <div key={project.id} className="flex items-center gap-1 py-1 hover:bg-blue-100 cursor-pointer">
-                            <FileText className="w-4 h-4 text-blue-600" />
+                          <div key={project.id} className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer">
+                            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm">{project.name}</span>
                           </div>
                         ))}
@@ -297,11 +297,11 @@ export default function WindowsExplorer({
         </div>
 
         {/* Right Pane - File Listing */}
-        <div className="flex-1 bg-white overflow-auto">
+        <div className="flex-1 bg-white dark:bg-[#1e1e1e] overflow-auto">
           <div className="p-2">
             {viewMode === 'details' && (
-              <div className="bg-[#ece9d8] border border-gray-400 mb-2">
-                <div className="flex text-sm font-medium p-2 border-b border-gray-400">
+              <div className="bg-[#ece9d8] dark:bg-[#3c3c3c] border border-gray-400 dark:border-gray-600 mb-2">
+                <div className="flex text-sm font-medium p-2 border-b border-gray-400 dark:border-gray-600 text-black dark:text-gray-200">
                   <div className="flex items-center gap-3 flex-1">
                     <div className="w-5"></div> {/* Space for icon */}
                     <span>Name</span>
@@ -322,11 +322,11 @@ export default function WindowsExplorer({
                     key={folder.id}
                     onClick={() => handleItemSelect(`folder-${folder.id}`)}
                     onDoubleClick={() => handleDoubleClick(`folder-${folder.id}`, 'folder')}
-                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 ${
-                      isSelected ? 'bg-[#316ac5] text-white' : ''
+                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 ${
+                      isSelected ? 'bg-[#316ac5] text-white' : 'text-black dark:text-gray-200'
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
-                    <Folder className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-yellow-600`} />
+                    <Folder className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-yellow-600 dark:text-yellow-400`} />
                     {viewMode === 'details' ? (
                       <>
                         <div className="flex-1">
@@ -357,11 +357,11 @@ export default function WindowsExplorer({
                     key={project.id}
                     href={currentFolderId ? `/projects/${folders.find(f => f.id === currentFolderId)?.slug}/${project.slug}` : `/projects/${project.slug}`}
                     onClick={() => handleItemSelect(`project-${project.id}`)}
-                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 ${
-                      isSelected ? 'bg-[#316ac5] text-white' : ''
+                    className={`flex items-center gap-3 p-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 ${
+                      isSelected ? 'bg-[#316ac5] text-white' : 'text-black dark:text-gray-200'
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
-                    <FileText className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-blue-600`} />
+                    <FileText className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-blue-600 dark:text-blue-400`} />
                     {viewMode === 'details' ? (
                       <>
                         <div className="flex-1">

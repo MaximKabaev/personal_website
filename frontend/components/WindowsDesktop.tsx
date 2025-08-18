@@ -282,7 +282,7 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
     >
       {/* Windows Explorer Window */}
       <div
-        className="absolute bg-white"
+        className="absolute"
         style={{
           left: windowState.x,
           top: windowState.y,
