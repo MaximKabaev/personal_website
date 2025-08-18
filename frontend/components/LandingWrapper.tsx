@@ -9,6 +9,7 @@ import DevTerminalSection from "./DevTerminalSection"
 import { TerminalSequenceProvider } from "./TerminalSequence"
 import Link from "next/link"
 import WindowsFolder from "./WindowsFolder"
+import WindowsExplorer from "./WindowsExplorer"
 import AnimationTracker from "./AnimationTracker"
 
 type Props = {
@@ -185,41 +186,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
 
             <section className="mb-12">
               <h2 className="text-2xl font-bold mb-6">Projects</h2>
-              <div className="bg-background border border-muted rounded-lg p-4">
-                <div className="space-y-1">
-                  {/* Folders */}
-                  {folders.map((folder) => {
-                    const folderProjects = projects.filter(p => p.folder_id === folder.id)
-                    return (
-                      <WindowsFolder
-                        key={folder.id}
-                        folder={folder}
-                        projects={folderProjects}
-                      />
-                    )
-                  })}
-                  
-                  {/* Root level projects */}
-                  {projects.filter(p => !p.folder_id).length > 0 && (
-                    <>
-                      {folders.length > 0 && (
-                        <div className="border-t border-muted my-2"></div>
-                      )}
-                      <WindowsFolder
-                        projects={projects.filter(p => !p.folder_id)}
-                        isRoot={true}
-                      />
-                    </>
-                  )}
-                  
-                  {/* No projects at all */}
-                  {projects.length === 0 && folders.length === 0 && (
-                    <div className="text-muted-foreground italic text-center py-8">
-                      No projects yet. Coming soon!
-                    </div>
-                  )}
-                </div>
-              </div>
+              <WindowsExplorer projects={projects} folders={folders} />
             </section>
 
             <section>
