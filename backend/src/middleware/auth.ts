@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { createClient } from '@supabase/supabase-js'
-import jwt from 'jsonwebtoken'
+// import jwt from 'jsonwebtoken' // Not used currently
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL
@@ -85,7 +85,7 @@ export const protectRoute = (req: Request, res: Response, next: NextFunction) =>
 
   // No auth header in development - allow access
   console.warn(`Auth middleware: Allowing unauthenticated access to ${req.path} (development mode)`)
-  next()
+  return next()
 }
 
 /**

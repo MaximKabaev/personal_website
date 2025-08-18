@@ -33,7 +33,7 @@ pool.on('connect', () => {
 });
 
 // Handle pool errors more gracefully - don't exit the process
-pool.on('error', (err: Error, client: PoolClient) => {
+pool.on('error', (err: Error, _client: PoolClient) => {
   console.error('Unexpected error on idle client:', err.message);
   // Don't exit - the pool will automatically create new connections as needed
   // This prevents the app from crashing when Supabase pooler terminates idle connections

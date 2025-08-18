@@ -157,10 +157,10 @@ router.get('/:id', async (req, res) => {
       }
     };
     
-    res.json(formattedEntry);
+    return res.json(formattedEntry);
   } catch (error) {
     console.error('Error fetching devlog entry:', error);
-    res.status(500).json({ error: 'Failed to fetch devlog entry' });
+    return res.status(500).json({ error: 'Failed to fetch devlog entry' });
   }
 });
 
@@ -188,10 +188,10 @@ router.post('/', protectRoute, async (req, res) => {
           [project_id, title, content, entry_type || 'progress', tags || [], JSON.stringify(images || [])]
         );
     
-    res.status(201).json(entry);
+    return res.status(201).json(entry);
   } catch (error) {
     console.error('Error creating devlog entry:', error);
-    res.status(500).json({ error: 'Failed to create devlog entry' });
+    return res.status(500).json({ error: 'Failed to create devlog entry' });
   }
 });
 
@@ -229,10 +229,10 @@ router.put('/:id', protectRoute, async (req, res) => {
       return res.status(404).json({ error: 'Devlog entry not found' });
     }
     
-    res.json(entry);
+    return res.json(entry);
   } catch (error) {
     console.error('Error updating devlog entry:', error);
-    res.status(500).json({ error: 'Failed to update devlog entry' });
+    return res.status(500).json({ error: 'Failed to update devlog entry' });
   }
 });
 
@@ -250,10 +250,10 @@ router.delete('/:id', protectRoute, async (req, res) => {
       return res.status(404).json({ error: 'Devlog entry not found' });
     }
     
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     console.error('Error deleting devlog entry:', error);
-    res.status(500).json({ error: 'Failed to delete devlog entry' });
+    return res.status(500).json({ error: 'Failed to delete devlog entry' });
   }
 });
 

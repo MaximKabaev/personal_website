@@ -1,4 +1,4 @@
-import { TwitterApi, TweetV2, UserV2 } from 'twitter-api-v2';
+import { TwitterApi, TweetV2 } from 'twitter-api-v2';
 import { pool } from '../config/database';
 
 export interface StoredTweet {
@@ -126,9 +126,9 @@ class TwitterService {
       try {
         // Extract media URLs if present
         const mediaUrls: string[] = [];
-        if (tweet.attachments?.media_keys && tweet.includes?.media) {
+        if (tweet.attachments?.media_keys && (tweet as any).includes?.media) {
           for (const mediaKey of tweet.attachments.media_keys) {
-            const media = tweet.includes.media.find(m => m.media_key === mediaKey);
+            const media = (tweet as any).includes.media.find((m: any) => m.media_key === mediaKey);
             if (media && 'url' in media) {
               mediaUrls.push(media.url);
             }
