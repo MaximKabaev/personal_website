@@ -131,6 +131,9 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       case 'help':
         handleHelp()
         break
+      case 'quit':
+        handleQuit()
+        break
       default:
         // Check if it's a file navigation command
         if (!handleFileNavigation(command)) {
@@ -297,6 +300,7 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       '  cd ..            - go up one directory',
       '  cat [file]       - display project information',
       '  clear            - clear terminal',
+      '  quit             - exit',
       '  help             - show this help',
       '',
       'To open the project page:',
@@ -309,13 +313,30 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
     helpText.forEach(line => addToTerminal({ type: 'output', content: line }))
   }
 
+  const handleQuit = () => {
+    addToTerminal({ type: 'output', content: 'Goodbye!' })
+    setTimeout(() => {
+      // Clear all session storage
+      sessionStorage.removeItem('terminalHistory')
+      sessionStorage.removeItem('terminalPath')
+      sessionStorage.removeItem('commandHistory')
+      sessionStorage.removeItem('animationShown')
+      
+      // Clear dev/normal mode selection
+      localStorage.removeItem('isDev')
+      
+      // Redirect to blank page
+      window.location.href = 'about:blank'
+    }, 500)
+  }
+
   const getCompletions = (partial: string): string[] => {
     const parts = partial.split(' ')
     const lastPart = parts[parts.length - 1]
     
     // If first word, complete commands
     if (parts.length === 1) {
-      const commands = ['pwd', 'ls', 'cd', 'clear', 'help', 'nano', 'cat']
+      const commands = ['pwd', 'ls', 'cd', 'clear', 'help', 'nano', 'cat', 'quit']
       return commands.filter(cmd => cmd.startsWith(lastPart))
     }
     
