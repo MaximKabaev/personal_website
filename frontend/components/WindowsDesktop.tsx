@@ -102,10 +102,14 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
       const deltaX = e.clientX - dragStart.x
       const deltaY = e.clientY - dragStart.y
       
-      const newX = Math.max(0, Math.min(dragStart.windowX + deltaX, window.innerWidth - windowState.width))
-      const newY = Math.max(0, Math.min(dragStart.windowY + deltaY, window.innerHeight - 100))
-      
-      setWindowState(prev => ({ ...prev, x: newX, y: newY }))
+      const desktopRect = desktopRef.current?.getBoundingClientRect()
+      if (desktopRect) {
+        // Allow window to move anywhere within the desktop container bounds
+        const newX = Math.max(-windowState.width + 50, Math.min(dragStart.windowX + deltaX, desktopRect.width - 50))
+        const newY = Math.max(0, Math.min(dragStart.windowY + deltaY, desktopRect.height - 100))
+        
+        setWindowState(prev => ({ ...prev, x: newX, y: newY }))
+      }
     }
     
     if (isResizing) {
@@ -274,6 +278,7 @@ export default function WindowsDesktop({ projects, folders, onReloadStateChange 
       }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
     >
       {/* Windows Explorer Window */}
       <div
