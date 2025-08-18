@@ -11,6 +11,7 @@ import Link from "next/link"
 import WindowsFolder from "./WindowsFolder"
 import WindowsExplorer from "./WindowsExplorer"
 import WindowsDesktop from "./WindowsDesktop"
+import MobileProjects from "./MobileProjects"
 import AnimationTracker from "./AnimationTracker"
 import { RotateCcw } from "lucide-react"
 
@@ -25,6 +26,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
   const [skipAnimation, setSkipAnimation] = useState(false)
   const [showReloadButton, setShowReloadButton] = useState(false)
   const [reloadFunction, setReloadFunction] = useState<(() => void) | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -41,7 +43,16 @@ export default function LandingWrapper({ projects, folders }: Props) {
       setSkipAnimation(false)
     }
     
+    // Check if mobile/small screen
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // Tailwind's md breakpoint
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
     setIsLoading(false)
+    
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   const handleSelection = (isDevMode: boolean) => {
@@ -202,7 +213,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-6">
                 <h2 className="text-2xl font-bold">Projects</h2>
-                {showReloadButton && (
+                {showReloadButton && !isMobile && (
                   <button
                     onClick={handleReloadClick}
                     className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
@@ -212,11 +223,18 @@ export default function LandingWrapper({ projects, folders }: Props) {
                   </button>
                 )}
               </div>
-              <WindowsDesktop 
-                projects={projects} 
-                folders={folders} 
-                onReloadStateChange={handleReloadStateChange}
-              />
+              {isMobile ? (
+                <MobileProjects 
+                  projects={projects} 
+                  folders={folders} 
+                />
+              ) : (
+                <WindowsDesktop 
+                  projects={projects} 
+                  folders={folders} 
+                  onReloadStateChange={handleReloadStateChange}
+                />
+              )}
             </section>
 
             <section>
