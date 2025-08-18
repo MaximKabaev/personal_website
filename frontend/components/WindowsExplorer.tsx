@@ -89,6 +89,18 @@ export default function WindowsExplorer({ projects, folders }: Props) {
     }
   }
 
+  const handlePathSegmentClick = (segmentIndex: number) => {
+    if (segmentIndex === 0 || segmentIndex === 1) {
+      // Clicked on "My Computer" or "Projects" - go to root
+      setCurrentFolderId(null)
+      setCurrentPath(['My Computer', 'Projects'])
+      setSelectedItems(new Set())
+    } else if (segmentIndex === 2 && currentPath.length === 3) {
+      // Clicked on folder name when we're inside it - do nothing (already there)
+      return
+    }
+  }
+
   // Get items to display in right pane based on current location
   const getCurrentDisplayItems = () => {
     if (currentFolderId === null) {
@@ -171,7 +183,12 @@ export default function WindowsExplorer({ projects, folders }: Props) {
               {currentPath.map((segment, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && <ChevronRight className="w-3 h-3 text-gray-500" />}
-                  <span>{segment}</span>
+                  <span 
+                    className="hover:underline cursor-pointer hover:text-blue-600"
+                    onClick={() => handlePathSegmentClick(index)}
+                  >
+                    {segment}
+                  </span>
                 </React.Fragment>
               ))}
             </div>
@@ -255,9 +272,12 @@ export default function WindowsExplorer({ projects, folders }: Props) {
             {viewMode === 'details' && (
               <div className="bg-[#ece9d8] border border-gray-400 mb-2">
                 <div className="flex text-sm font-medium p-2 border-b border-gray-400">
-                  <div className="flex-1">Name</div>
-                  <div className="w-24">Status</div>
-                  <div className="w-24">Type</div>
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-5"></div> {/* Space for icon */}
+                    <span>Name</span>
+                  </div>
+                  <div className="w-24 text-center">Status</div>
+                  <div className="w-24 text-center">Type</div>
                 </div>
               </div>
             )}
@@ -277,16 +297,19 @@ export default function WindowsExplorer({ projects, folders }: Props) {
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
                     <Folder className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-yellow-600`} />
-                    <div className={`flex-1 ${viewMode === 'icons' ? 'text-center' : ''}`}>
-                      <span className="font-medium">{folder.name}</span>
-                      {viewMode === 'details' && (
-                        <div className="flex text-sm">
-                          <div className="flex-1"></div>
-                          <div className="w-24">-</div>
-                          <div className="w-24">Folder</div>
+                    {viewMode === 'details' ? (
+                      <>
+                        <div className="flex-1">
+                          <span className="font-medium">{folder.name}</span>
                         </div>
-                      )}
-                    </div>
+                        <div className="w-24 text-center text-sm">-</div>
+                        <div className="w-24 text-center text-sm">Folder</div>
+                      </>
+                    ) : (
+                      <div className={`flex-1 ${viewMode === 'icons' ? 'text-center' : ''}`}>
+                        <span className="font-medium">{folder.name}</span>
+                      </div>
+                    )}
                     {viewMode === 'list' && (
                       <span className="text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded">
                         {folderProjects.length} items
@@ -309,16 +332,19 @@ export default function WindowsExplorer({ projects, folders }: Props) {
                     } ${viewMode === 'icons' ? 'flex-col text-center' : ''}`}
                   >
                     <FileText className={`${viewMode === 'icons' ? 'w-8 h-8' : 'w-5 h-5'} text-blue-600`} />
-                    <div className={`flex-1 ${viewMode === 'icons' ? 'text-center' : ''}`}>
-                      <span className="font-medium">{project.name}</span>
-                      {viewMode === 'details' && (
-                        <div className="flex text-sm">
-                          <div className="flex-1"></div>
-                          <div className="w-24">{project.status}</div>
-                          <div className="w-24">Project</div>
+                    {viewMode === 'details' ? (
+                      <>
+                        <div className="flex-1">
+                          <span className="font-medium">{project.name}</span>
                         </div>
-                      )}
-                    </div>
+                        <div className="w-24 text-center text-sm">{project.status}</div>
+                        <div className="w-24 text-center text-sm">Project</div>
+                      </>
+                    ) : (
+                      <div className={`flex-1 ${viewMode === 'icons' ? 'text-center' : ''}`}>
+                        <span className="font-medium">{project.name}</span>
+                      </div>
+                    )}
                     {viewMode === 'list' && (
                       <span className="text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded">
                         {project.status}
