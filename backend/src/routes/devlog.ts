@@ -42,6 +42,7 @@ router.get('/', async (req, res) => {
       content: entry.content,
       entry_type: entry.entry_type,
       tags: entry.tags,
+      images: entry.images || [],
       created_at: entry.created_at,
       updated_at: entry.updated_at,
       project: entry.project_name ? {
@@ -81,6 +82,7 @@ router.get('/recent', async (req, res) => {
       content: entry.content,
       entry_type: entry.entry_type,
       tags: entry.tags,
+      images: entry.images || [],
       created_at: entry.created_at,
       updated_at: entry.updated_at,
       project: {
@@ -145,6 +147,7 @@ router.get('/:id', async (req, res) => {
       content: entry.content,
       entry_type: entry.entry_type,
       tags: entry.tags,
+      images: entry.images || [],
       created_at: entry.created_at,
       updated_at: entry.updated_at,
       project: {
@@ -164,17 +167,17 @@ router.get('/:id', async (req, res) => {
 // Create new devlog entry (protected)
 router.post('/', protectRoute, async (req, res) => {
   try {
-    const { project_id, title, content, entry_type, tags } = req.body;
+    const { project_id, title, content, entry_type, tags, images } = req.body;
     
     if (!project_id || !title || !content) {
       return res.status(400).json({ error: 'project_id, title, and content are required' });
     }
     
     const entry = await queryOne<DevlogEntry>(
-      `INSERT INTO devlog_entries (project_id, title, content, entry_type, tags)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO devlog_entries (project_id, title, content, entry_type, tags, images)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [project_id, title, content, entry_type || 'progress', tags || []]
+      [project_id, title, content, entry_type || 'progress', tags || [], JSON.stringify(images || [])]
     );
     
     res.status(201).json(entry);
@@ -197,7 +200,13 @@ router.put('/:id', protectRoute, async (req, res) => {
     }
     
     const setClause = updateFields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-    const values = [id, ...updateFields.map(field => updates[field])];
+    const values = [id, ...updateFields.map(field => {
+      // Special handling for images field to ensure proper JSON serialization
+      if (field === 'images' && Array.isArray(updates[field])) {
+        return JSON.stringify(updates[field]);
+      }
+      return updates[field];
+    })];
     
     const entry = await queryOne<DevlogEntry>(
       `UPDATE devlog_entries SET ${setClause}, updated_at = NOW() WHERE id = $1 RETURNING *`,

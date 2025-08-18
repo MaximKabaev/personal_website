@@ -5,9 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Trash2, Plus, FolderPlus, FilePlus, BookOpen, ChevronDown, ChevronRight, Clock, Tag, Edit2, X, Save, LogOut } from 'lucide-react'
 import AuthGuard from '@/components/AuthGuard'
+import ImageUploader from '@/components/ImageUploader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAuthFetch } from '@/hooks/useAuthFetch'
 import { formatDate } from '@/lib/utils'
+import type { DevlogImage } from '@/lib/api'
 
 interface Folder {
   id: string
@@ -37,6 +39,7 @@ interface DevlogEntry {
   content: string
   entry_type: 'progress' | 'milestone' | 'bug_fix' | 'feature' | 'thoughts'
   tags: string[]
+  images?: DevlogImage[]
   created_at: string
   updated_at: string
 }
@@ -79,11 +82,13 @@ function AdminPageContent() {
     entry_type: 'progress' as const,
     tags: ''
   })
+  const [newDevlogImages, setNewDevlogImages] = useState<DevlogImage[]>([])
   
   // Edit form states
   const [editFolderData, setEditFolderData] = useState<Partial<Folder>>({})
   const [editProjectData, setEditProjectData] = useState<Partial<Project>>({})
   const [editDevlogData, setEditDevlogData] = useState<Partial<DevlogEntry>>({})
+  const [editDevlogImages, setEditDevlogImages] = useState<DevlogImage[]>([])
 
   // Fetch data
   useEffect(() => {
@@ -214,7 +219,8 @@ function AdminPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newDevlogEntry,
-          tags: newDevlogEntry.tags ? newDevlogEntry.tags.split(',').map(s => s.trim()) : []
+          tags: newDevlogEntry.tags ? newDevlogEntry.tags.split(',').map(s => s.trim()) : [],
+          images: newDevlogImages
         })
       })
       
@@ -231,6 +237,7 @@ function AdminPageContent() {
         entry_type: 'progress',
         tags: ''
       }))
+      setNewDevlogImages([])
       
       // Expand the project to show the new entry
       setExpandedProjects(prev => new Set(prev).add(newDevlogEntry.project_id))
@@ -305,7 +312,8 @@ function AdminPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editDevlogData,
-          tags: tags
+          tags: tags,
+          images: editDevlogImages
         })
       })
       
@@ -321,6 +329,7 @@ function AdminPageContent() {
       
       setEditingDevlog(null)
       setEditDevlogData({})
+      setEditDevlogImages([])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update devlog entry')
     }
@@ -1006,6 +1015,17 @@ function AdminPageContent() {
                     className="w-full px-3 py-2 bg-background border border-muted rounded font-mono text-sm"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">Images</label>
+                  <ImageUploader
+                    projectId={newDevlogEntry.project_id || 'temp'}
+                    initialImages={newDevlogImages}
+                    onImagesChange={setNewDevlogImages}
+                    maxImages={5}
+                    disabled={!newDevlogEntry.project_id}
+                  />
+                </div>
                 
                 <button
                   type="submit"
@@ -1090,6 +1110,15 @@ function AdminPageContent() {
                                           rows={4}
                                           placeholder="Content"
                                         />
+                                        <div>
+                                          <label className="block text-sm text-muted-foreground mb-2">Images</label>
+                                          <ImageUploader
+                                            projectId={project.id}
+                                            initialImages={editDevlogImages}
+                                            onImagesChange={setEditDevlogImages}
+                                            maxImages={5}
+                                          />
+                                        </div>
                                         <div className="flex gap-2">
                                           <button
                                             onClick={() => handleUpdateDevlog(entry.id)}
@@ -1102,6 +1131,7 @@ function AdminPageContent() {
                                             onClick={() => {
                                               setEditingDevlog(null)
                                               setEditDevlogData({})
+                                              setEditDevlogImages([])
                                             }}
                                             className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
                                           >
@@ -1146,6 +1176,7 @@ function AdminPageContent() {
                                             onClick={() => {
                                               setEditingDevlog(entry.id)
                                               setEditDevlogData(entry)
+                                              setEditDevlogImages(entry.images || [])
                                             }}
                                             className="text-blue-400 hover:text-blue-300 transition-colors"
                                           >

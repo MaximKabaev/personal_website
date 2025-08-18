@@ -26,6 +26,15 @@ export interface Project {
   updated_at: string;
 }
 
+export interface DevlogImage {
+  id: string;
+  url: string;
+  filename: string;
+  size: number;
+  uploaded_at: string;
+  alt_text?: string;
+}
+
 export interface DevlogEntry {
   id: string;
   project_id: string;
@@ -33,6 +42,7 @@ export interface DevlogEntry {
   content: string;
   entry_type: 'progress' | 'milestone' | 'bug_fix' | 'feature' | 'thoughts';
   tags: string[];
+  images?: DevlogImage[];
   created_at: string;
   updated_at: string;
   project?: {

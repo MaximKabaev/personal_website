@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getProject, getProjectByPath, getProjectDevlog } from "@/lib/api"
 import { ArrowLeft } from "lucide-react"
 import ClientThemeToggle from "@/components/ClientThemeToggle"
+import { DevlogImageGallery } from "@/components/DevlogImage"
 import { formatDate, formatTime } from "@/lib/utils"
 
 interface ProjectPageProps {
@@ -159,6 +160,17 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                         </p>
                       ))}
                     </div>
+
+                    {/* Display images if available */}
+                    {entry.images && entry.images.length > 0 && (
+                      <div className="mt-4">
+                        <DevlogImageGallery 
+                          images={entry.images} 
+                          maxDisplay={3}
+                        />
+                      </div>
+                    )}
+
                     {entry.tags && entry.tags.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1">
                         {entry.tags.map((tag: string) => (
