@@ -10,7 +10,9 @@ import { TerminalSequenceProvider } from "./TerminalSequence"
 import Link from "next/link"
 import WindowsFolder from "./WindowsFolder"
 import WindowsExplorer from "./WindowsExplorer"
+import WindowsDesktop from "./WindowsDesktop"
 import AnimationTracker from "./AnimationTracker"
+import { RotateCcw } from "lucide-react"
 
 type Props = {
   projects: any[]
@@ -21,6 +23,8 @@ export default function LandingWrapper({ projects, folders }: Props) {
   const [isDev, setIsDev] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [skipAnimation, setSkipAnimation] = useState(false)
+  const [showReloadButton, setShowReloadButton] = useState(false)
+  const [reloadFunction, setReloadFunction] = useState<(() => void) | null>(null)
 
   useEffect(() => {
     // Check if user has already made a choice
@@ -56,6 +60,17 @@ export default function LandingWrapper({ projects, folders }: Props) {
     sessionStorage.removeItem("terminalPath")
     sessionStorage.removeItem("commandHistory")
     setIsDev(null)
+  }
+
+  const handleReloadStateChange = (showReload: boolean, reloadFn: () => void) => {
+    setShowReloadButton(showReload)
+    setReloadFunction(() => reloadFn)
+  }
+
+  const handleReloadClick = () => {
+    if (reloadFunction) {
+      reloadFunction()
+    }
   }
 
   return (
@@ -185,8 +200,23 @@ export default function LandingWrapper({ projects, folders }: Props) {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Projects</h2>
-              <WindowsExplorer projects={projects} folders={folders} />
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-2xl font-bold">Projects</h2>
+                {showReloadButton && (
+                  <button
+                    onClick={handleReloadClick}
+                    className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                    title="Reset Explorer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <WindowsDesktop 
+                projects={projects} 
+                folders={folders} 
+                onReloadStateChange={handleReloadStateChange}
+              />
             </section>
 
             <section>

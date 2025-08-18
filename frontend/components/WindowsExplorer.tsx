@@ -13,7 +13,8 @@ import {
   ChevronUp,
   List,
   Grid,
-  MoreHorizontal
+  MoreHorizontal,
+  RotateCcw
 } from "lucide-react"
 
 type Project = {
@@ -34,11 +35,24 @@ type FolderType = {
 type Props = {
   projects: Project[]
   folders: FolderType[]
+  onTitleBarMouseDown?: (e: React.MouseEvent) => void
+  onMinimize?: () => void
+  onMaximize?: () => void
+  onClose?: () => void
+  isMaximized?: boolean
 }
 
 type ViewMode = 'list' | 'details' | 'icons'
 
-export default function WindowsExplorer({ projects, folders }: Props) {
+export default function WindowsExplorer({ 
+  projects, 
+  folders, 
+  onTitleBarMouseDown, 
+  onMinimize, 
+  onMaximize, 
+  onClose, 
+  isMaximized = false
+}: Props) {
   const [currentPath, setCurrentPath] = useState<string[]>(['My Computer', 'Projects'])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null) // null means root level
   const [viewMode, setViewMode] = useState<ViewMode>('list')
@@ -123,23 +137,39 @@ export default function WindowsExplorer({ projects, folders }: Props) {
   const totalItems = displayItems.folders.length + displayItems.projects.length
 
   return (
-    <div className="bg-[#f0f0f0] border border-gray-400 rounded-sm shadow-md font-sans">
+    <div className="bg-[#f0f0f0] border border-gray-400 rounded-sm font-sans h-full w-full overflow-hidden flex flex-col">
       {/* Title Bar */}
-      <div className="bg-gradient-to-r from-[#0054e3] to-[#0041ac] text-white px-2 py-1 flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2">
+      <div 
+        className="bg-gradient-to-r from-[#0054e3] to-[#0041ac] text-white px-2 py-1 flex items-center justify-between text-sm cursor-move select-none"
+        onMouseDown={onTitleBarMouseDown}
+      >
+        <div className="flex items-center gap-2 pointer-events-none">
           <div className="w-4 h-4">
             <Folder className="w-full h-full" />
           </div>
           <span className="font-normal">Projects</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center">
+        <div className="flex items-center gap-1 pointer-events-auto">
+          <button 
+            className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center"
+            onClick={onMinimize}
+          >
             <Minus className="w-3 h-3 text-black" />
           </button>
-          <button className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center">
-            <Square className="w-2 h-2 text-black" />
+          <button 
+            className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center"
+            onClick={onMaximize}
+          >
+            {isMaximized ? (
+              <div className="w-2 h-2 border border-black"></div>
+            ) : (
+              <Square className="w-2 h-2 text-black" />
+            )}
           </button>
-          <button className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center">
+          <button 
+            className="w-5 h-5 bg-[#c0c0c0] hover:bg-[#d0d0d0] border border-gray-400 flex items-center justify-center"
+            onClick={onClose}
+          >
             <X className="w-3 h-3 text-black" />
           </button>
         </div>
@@ -222,7 +252,7 @@ export default function WindowsExplorer({ projects, folders }: Props) {
 
 
       {/* Main Content Area */}
-      <div className="flex" style={{ height: '400px' }}>
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Navigation Tree */}
         <div className="w-1/3 bg-white border-r border-gray-400 p-2 overflow-auto">
           <div className="text-sm">
