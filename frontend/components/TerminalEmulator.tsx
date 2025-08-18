@@ -417,12 +417,23 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
       if (resolved) {
         const dirItems = fileSystem.list(resolved)
         return dirItems
+          .filter(item => item.name.startsWith(searchTerm))
           .map(item => prefix + item.name + (item.type === 'directory' ? '/' : ''))
-          .filter(name => name.startsWith(lastPart))
       }
     }
     
     return names.filter(name => name.startsWith(lastPart))
+  }
+
+  const getCompletionDisplay = (completions: string[]): string[] => {
+    // For display purposes, show only the final part of the path
+    return completions.map(completion => {
+      if (completion.includes('/')) {
+        const parts = completion.split('/')
+        return parts[parts.length - 1] || parts[parts.length - 2] + '/'
+      }
+      return completion
+    })
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -448,8 +459,8 @@ export default function TerminalEmulator({ projects, folders, onReady, commandRe
         setShowCompletions(false)
         setCompletionOptions([])
       } else {
-        // Multiple completions - show them
-        setCompletionOptions(completions)
+        // Multiple completions - show them with display names
+        setCompletionOptions(getCompletionDisplay(completions))
         setShowCompletions(true)
         
         // Find common prefix

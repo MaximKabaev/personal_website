@@ -176,9 +176,10 @@ export default function LandingWrapper({ projects, folders }: Props) {
                   <span>whoami</span>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  hi. im maxim, a developer who enjoys building interesting projects and sharing the journey. this is my
-                  devlog where i document progress, thoughts, and learnings from various projects. each entry includes
-                  timestamps and personal reflections on the development process.
+                  hi. im maxim, an aerospace engineering student at the university of bath with a strong
+                  background in software development (mostly self-taught). i’m passionate about building
+                  things, constantly exploring new ideas, and driven by the belief that with enough
+                  experiments, after enough startups fails, at least one will succeed — it’s simple statistics, you just gotta keep trying.
                 </p>
               </section>
 
