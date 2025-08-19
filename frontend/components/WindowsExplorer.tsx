@@ -384,6 +384,19 @@ export default function WindowsExplorer({
               <span className="font-medium">Projects</span>
             </div>
             <div className="ml-4 mt-1">
+              {/* Root level projects (no folder) */}
+              {projects.filter(p => !p.folder_id).map((project) => (
+                <Link 
+                  key={project.id} 
+                  href={`/projects/${project.slug}`}
+                  className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm">{project.name}</span>
+                </Link>
+              ))}
+              
+              {/* Folders and their projects */}
               {folders.map((folder) => {
                 const isOpen = openFolders.has(folder.id)
                 const folderProjects = projects.filter(p => p.folder_id === folder.id)
@@ -405,10 +418,14 @@ export default function WindowsExplorer({
                     {isOpen && (
                       <div className="ml-6">
                         {folderProjects.map((project) => (
-                          <div key={project.id} className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer">
+                          <Link 
+                            key={project.id} 
+                            href={`/projects/${folder.slug}/${project.slug}`}
+                            className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
+                          >
                             <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm">{project.name}</span>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     )}
