@@ -31,6 +31,8 @@ type FolderType = {
   id: string
   name: string
   slug: string
+  parent_id?: string | null
+  children?: FolderType[]
 }
 
 type Props = {
@@ -102,7 +104,7 @@ export default function WindowsExplorer({
   const handleDoubleClick = (itemId: string, itemType: 'folder' | 'project' | 'file') => {
     if (itemType === 'folder') {
       const folderId = itemId.replace('folder-', '')
-      
+
       // Handle special case: Projects folder from My Computer level
       if (folderId === 'projects' && currentLevel === 'my-computer') {
         const newPath = ['My Computer', 'Projects']
@@ -112,12 +114,12 @@ export default function WindowsExplorer({
         addToNavigationHistory(newPath, null, 'projects')
         return
       }
-      
-      const folder = folders.find(f => f.id === folderId)
-      
+
+      const folder = findFolderById(folderId)
+
       // Navigate into the folder
       if (folder) {
-        const newPath = ['My Computer', 'Projects', folder.name]
+        const newPath = buildFolderPath(folderId)
         setCurrentFolderId(folderId)
         setCurrentPath(newPath)
         addToNavigationHistory(newPath, folderId, 'projects')
@@ -175,10 +177,95 @@ export default function WindowsExplorer({
       setCurrentLevel('projects')
       addToNavigationHistory(newPath, null, 'projects')
       setSelectedItems(new Set())
-    } else if (segmentIndex === 2 && currentPath.length === 3) {
-      // Clicked on folder name when we're inside it - do nothing (already there)
-      return
+    } else if (segmentIndex >= 2) {
+      // Clicked on a folder name in the breadcrumb
+      // If it's the last segment and we're already there, do nothing
+      if (segmentIndex === currentPath.length - 1) return
+
+      // Navigate to the folder at this breadcrumb depth
+      // Breadcrumb: [My Computer, Projects, Folder1, Folder2, ...]
+      // segmentIndex 2 = first folder, 3 = second folder, etc.
+      // Walk the folder tree to find the folder at this depth
+      const folderNames = currentPath.slice(2, segmentIndex + 1)
+      let parentFolders = folders // start from root
+      let targetFolder: FolderType | undefined
+
+      for (const name of folderNames) {
+        targetFolder = parentFolders.find(f => f.name === name)
+        if (!targetFolder) {
+          // Try flat search as fallback
+          targetFolder = allFolders.find(f => f.name === name)
+          break
+        }
+        parentFolders = targetFolder.children || []
+      }
+
+      if (targetFolder) {
+        const newPath = buildFolderPath(targetFolder.id)
+        setCurrentFolderId(targetFolder.id)
+        setCurrentPath(newPath)
+        setCurrentLevel('projects')
+        addToNavigationHistory(newPath, targetFolder.id, 'projects')
+        setSelectedItems(new Set())
+      }
     }
+  }
+
+  // Helper to flatten all folders from the tree into a flat array
+  const getAllFolders = (folderList: FolderType[]): FolderType[] => {
+    const result: FolderType[] = []
+    const traverse = (items: FolderType[]) => {
+      for (const item of items) {
+        result.push(item)
+        if (item.children && item.children.length > 0) {
+          traverse(item.children)
+        }
+      }
+    }
+    traverse(folderList)
+    return result
+  }
+
+  const allFolders = getAllFolders(folders)
+
+  // Find a folder by id in the tree (including nested)
+  const findFolderById = (id: string): FolderType | undefined => {
+    return allFolders.find(f => f.id === id)
+  }
+
+  // Get child folders of a given parent (using the tree children or parent_id)
+  const getChildFolders = (parentId: string | null): FolderType[] => {
+    if (parentId === null) {
+      // Root level folders = the top-level items in the tree
+      return folders
+    }
+    const parent = findFolderById(parentId)
+    if (parent && parent.children) {
+      return parent.children
+    }
+    // Fallback: filter by parent_id from flat list
+    return allFolders.filter(f => f.parent_id === parentId)
+  }
+
+  // Build the full path for breadcrumb given a folder id
+  const buildFolderPath = (folderId: string): string[] => {
+    const path: string[] = ['My Computer', 'Projects']
+    const chain: FolderType[] = []
+    let current = findFolderById(folderId)
+    while (current) {
+      chain.unshift(current)
+      current = current.parent_id ? findFolderById(current.parent_id) : undefined
+    }
+    for (const f of chain) {
+      path.push(f.name)
+    }
+    return path
+  }
+
+  // Get the folder slug path for project links (e.g., for nested folders use the deepest folder's slug)
+  const getFolderSlugForLink = (folderId: string): string | undefined => {
+    const folder = findFolderById(folderId)
+    return folder?.slug
   }
 
   // Get items to display in right pane based on current location
@@ -201,15 +288,15 @@ export default function WindowsExplorer({
         }]
       }
     } else if (currentFolderId === null) {
-      // Show Projects level - all folders and root projects
+      // Show Projects level - root folders and root projects
       return {
-        folders: folders,
+        folders: getChildFolders(null),
         projects: projects.filter(p => !p.folder_id)
       }
     } else {
-      // Show contents of specific folder
+      // Show contents of specific folder - sub-folders AND projects
       return {
-        folders: [], // No subfolders for now
+        folders: getChildFolders(currentFolderId),
         projects: projects.filter(p => p.folder_id === currentFolderId)
       }
     }
@@ -246,6 +333,52 @@ export default function WindowsExplorer({
       setIsGameEnded(false)
       setFinalScore(0)
     }
+  }
+
+  const renderFolderTree = (folderList: FolderType[]) => {
+    return folderList.map((folder) => {
+      const isOpen = openFolders.has(folder.id)
+      const folderProjects = projects.filter(p => p.folder_id === folder.id)
+      const hasChildren = (folder.children && folder.children.length > 0) || folderProjects.length > 0
+
+      return (
+        <div key={folder.id}>
+          <div
+            onClick={() => handleFolderClick(folder.id)}
+            className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
+          >
+            {hasChildren ? (
+              <ChevronRight className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''} text-gray-600 dark:text-gray-400`} />
+            ) : (
+              <span className="w-3" />
+            )}
+            {isOpen ? (
+              <FolderOpen className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            ) : (
+              <Folder className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            )}
+            <span>{folder.name}</span>
+          </div>
+          {isOpen && (
+            <div className="ml-6">
+              {/* Sub-folders (recursive) */}
+              {folder.children && folder.children.length > 0 && renderFolderTree(folder.children)}
+              {/* Projects in this folder */}
+              {folderProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${folder.slug}/${project.slug}`}
+                  className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm">{project.name}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    })
   }
 
   return (
@@ -386,8 +519,8 @@ export default function WindowsExplorer({
             <div className="ml-4 mt-1">
               {/* Root level projects (no folder) */}
               {projects.filter(p => !p.folder_id).map((project) => (
-                <Link 
-                  key={project.id} 
+                <Link
+                  key={project.id}
                   href={`/projects/${project.slug}`}
                   className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
                 >
@@ -395,43 +528,9 @@ export default function WindowsExplorer({
                   <span className="text-sm">{project.name}</span>
                 </Link>
               ))}
-              
-              {/* Folders and their projects */}
-              {folders.map((folder) => {
-                const isOpen = openFolders.has(folder.id)
-                const folderProjects = projects.filter(p => p.folder_id === folder.id)
-                
-                return (
-                  <div key={folder.id}>
-                    <div 
-                      onClick={() => handleFolderClick(folder.id)}
-                      className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
-                    >
-                      <ChevronRight className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''} text-gray-600 dark:text-gray-400`} />
-                      {isOpen ? (
-                        <FolderOpen className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                      ) : (
-                        <Folder className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                      )}
-                      <span>{folder.name}</span>
-                    </div>
-                    {isOpen && (
-                      <div className="ml-6">
-                        {folderProjects.map((project) => (
-                          <Link 
-                            key={project.id} 
-                            href={`/projects/${folder.slug}/${project.slug}`}
-                            className="flex items-center gap-1 py-1 hover:bg-blue-100 dark:hover:bg-blue-800 cursor-pointer"
-                          >
-                            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm">{project.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+
+              {/* Recursive folder tree renderer */}
+              {renderFolderTree(folders)}
             </div>
           </div>
         </div>
@@ -455,6 +554,8 @@ export default function WindowsExplorer({
             <div className={`${viewMode === 'icons' ? 'grid grid-cols-4 gap-4' : 'space-y-1'}`}>
               {displayItems.folders.map((folder) => {
                 const folderProjects = projects.filter(p => p.folder_id === folder.id)
+                const childFolderCount = (folder.children?.length || 0)
+                const itemCount = folderProjects.length + childFolderCount
                 const isSelected = selectedItems.has(`folder-${folder.id}`)
                 
                 return (
@@ -484,7 +585,7 @@ export default function WindowsExplorer({
                     )}
                     {viewMode === 'list' && (
                       <span className="text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded">
-                        {folderProjects.length} items
+                        {itemCount} items
                       </span>
                     )}
                   </div>
@@ -535,7 +636,7 @@ export default function WindowsExplorer({
                 return (
                   <Link
                     key={project.id}
-                    href={currentFolderId ? `/projects/${folders.find(f => f.id === currentFolderId)?.slug}/${project.slug}` : `/projects/${project.slug}`}
+                    href={currentFolderId ? `/projects/${getFolderSlugForLink(currentFolderId)}/${project.slug}` : `/projects/${project.slug}`}
                     onClick={() => handleItemSelect(`project-${project.id}`)}
                     className={`flex items-center gap-3 p-2 cursor-pointer ${
                       isSelected 

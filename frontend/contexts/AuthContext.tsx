@@ -1,12 +1,17 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+
+interface JwtUser {
+  id: string
+  email: string
+}
+
 interface AuthContextType {
-  user: User | null
+  user: JwtUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
@@ -15,60 +20,52 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<JwtUser | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    // Check active session
-    const checkUser = async () => {
+    const token = localStorage.getItem('auth_token')
+    const userData = localStorage.getItem('auth_user')
+    if (token && userData) {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
-      } catch (error) {
-        console.error('Error checking auth session:', error)
-      } finally {
-        setLoading(false)
+        setUser(JSON.parse(userData))
+      } catch {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_user')
       }
     }
-
-    checkUser()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
+    setLoading(false)
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (error) {
-        return { error: error.message }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Login failed' }))
+        return { error: data.error || 'Invalid credentials' }
       }
 
-      setUser(data.user)
+      const { token, user: userData } = await res.json()
+      localStorage.setItem('auth_token', token)
+      localStorage.setItem('auth_user', JSON.stringify(userData))
+      setUser(userData)
       return { error: null }
     } catch (error) {
-      return { error: 'An unexpected error occurred' }
+      return { error: 'Network error — could not reach the server' }
     }
   }
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut()
-      setUser(null)
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('auth_user')
+    setUser(null)
+    router.push('/')
   }
 
   return (

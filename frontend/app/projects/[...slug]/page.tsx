@@ -29,10 +29,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       try {
         let projectData = null
         
-        // Check if it's a nested route (folder/project) or direct route (project)
-        if (resolvedParams.slug.length === 2) {
-          // Nested: /projects/folder/project
-          const [folderSlug, projectSlug] = resolvedParams.slug
+        if (resolvedParams.slug.length >= 2) {
+          // Nested: /projects/.../folderSlug/projectSlug
+          const folderSlug = resolvedParams.slug[resolvedParams.slug.length - 2]
+          const projectSlug = resolvedParams.slug[resolvedParams.slug.length - 1]
           const res = await fetch(`${API_URL}/projects/by-path/${folderSlug}/${projectSlug}`)
           if (res.ok) {
             projectData = await res.json()

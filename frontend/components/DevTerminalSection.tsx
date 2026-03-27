@@ -9,6 +9,59 @@ type Props = {
   skipAnimation?: boolean
 }
 
+function renderFolderTree(
+  folder: any,
+  projects: any[],
+  isLast: boolean,
+  pathPrefix: string,
+  handleProjectClick: (e: React.MouseEvent, path: string) => void
+) {
+  const folderProjects = projects.filter(p => p.folder_id === folder.id)
+  const children = folder.children || []
+  const allItems = [...children, ...folderProjects]
+  const folderPath = pathPrefix ? `${pathPrefix}/${folder.slug}` : folder.slug
+
+  return (
+    <div key={folder.id}>
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">{isLast ? '└─' : '├─'}</span>
+        <span className="text-muted-foreground">{folder.name}/</span>
+      </div>
+      <div className="ml-6 space-y-1">
+        {children.map((child: any, i: number) =>
+          renderFolderTree(
+            child,
+            projects,
+            i === children.length - 1 && folderProjects.length === 0,
+            folderPath,
+            handleProjectClick
+          )
+        )}
+        {folderProjects.map((project: any, projectIndex: number) => (
+          <div key={project.id} className="flex items-center gap-2">
+            <span className="text-muted-foreground">
+              {projectIndex === folderProjects.length - 1 ? '└─' : '├─'}
+            </span>
+            <button
+              onClick={(e) => handleProjectClick(e, `projects/${folderPath}/${project.slug}`)}
+              className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
+            >
+              {project.name}
+            </button>
+            <span className="text-muted-foreground text-xs">({project.status})</span>
+          </div>
+        ))}
+        {allItems.length === 0 && (
+          <div className="text-muted-foreground italic">
+            <span className="mr-2">└─</span>
+            <span>empty</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function DevTerminalSection({ projects, folders, skipAnimation = false }: Props) {
   const [showTerminal, setShowTerminal] = useState(skipAnimation)
   const setCommandRef = useRef<((command: string, autoExecute?: boolean) => void) | null>(null)
@@ -40,41 +93,15 @@ export default function DevTerminalSection({ projects, folders, skipAnimation = 
               <div className="ml-4 space-y-1">
                 {projects.length > 0 || folders.length > 0 ? (
                   <>
-                    {folders.map((folder, folderIndex) => {
-                      const folderProjects = projects.filter(p => p.folder_id === folder.id)
-                      const isLast = folderIndex === folders.length - 1 && projects.filter(p => !p.folder_id).length === 0
-
-                      return (
-                        <div key={folder.id}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">{isLast ? '└─' : '├─'}</span>
-                            <span className="text-muted-foreground">{folder.name}/</span>
-                          </div>
-                          <div className="ml-6 space-y-1">
-                            {folderProjects.map((project, projectIndex) => (
-                              <div key={project.id} className="flex items-center gap-2">
-                                <span className="text-muted-foreground">
-                                  {projectIndex === folderProjects.length - 1 ? '└─' : '├─'}
-                                </span>
-                                <button
-                                  onClick={(e) => handleProjectClick(e, `projects/${folder.slug}/${project.slug}`)}
-                                  className="text-foreground hover:text-primary underline transition-colors cursor-pointer"
-                                >
-                                  {project.name}
-                                </button>
-                                <span className="text-muted-foreground text-xs">({project.status})</span>
-                              </div>
-                            ))}
-                            {folderProjects.length === 0 && (
-                              <div className="text-muted-foreground italic">
-                                <span className="mr-2">└─</span>
-                                <span>empty</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                    {folders.map((folder, folderIndex) =>
+                      renderFolderTree(
+                        folder,
+                        projects,
+                        folderIndex === folders.length - 1 && projects.filter(p => !p.folder_id).length === 0,
+                        '',
+                        handleProjectClick
                       )
-                    })}
+                    )}
 
                     {projects.filter(p => !p.folder_id).map((project, index) => {
                       const rootProjects = projects.filter(p => !p.folder_id)

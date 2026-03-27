@@ -1,43 +1,32 @@
 import { Request, Response, NextFunction } from 'express'
-import { createClient } from '@supabase/supabase-js'
-// import jwt from 'jsonwebtoken' // Not used currently
+import jwt from 'jsonwebtoken'
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('Supabase configuration missing - auth will be disabled')
-}
-
-const supabase = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
 
 // Extend Express Request type
 declare global {
   namespace Express {
     interface Request {
-      user?: any
+      user?: { id: string; email: string }
     }
   }
 }
 
 /**
- * Middleware to verify Supabase JWT token
+ * Middleware to verify JWT token
  */
 export const authenticateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // Skip auth in development if Supabase is not configured
-  if (!supabase && process.env.NODE_ENV === 'development') {
-    console.warn('Auth middleware: Skipping authentication (Supabase not configured)')
-    return next()
-  }
-
   try {
+    // Check for API key first (read-only access)
+    const apiKey = req.headers['x-api-key'] as string
+    if (apiKey && apiKey === process.env.API_KEY) {
+      return next()
+    }
+
     // Get token from Authorization header
     const authHeader = req.headers.authorization
     const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
@@ -46,21 +35,19 @@ export const authenticateToken = async (
       return res.status(401).json({ error: 'Access token required' })
     }
 
-    if (!supabase) {
-      return res.status(500).json({ error: 'Authentication service not configured' })
-    }
-
-    // Verify the token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
-      return res.status(403).json({ error: 'Invalid or expired token' })
-    }
+    // Verify the JWT token
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string }
 
     // Attach user to request object
-    req.user = user
+    req.user = decoded
     next()
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(403).json({ error: 'Token expired' })
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({ error: 'Invalid token' })
+    }
     console.error('Auth middleware error:', error)
     res.status(500).json({ error: 'Authentication error' })
   }
@@ -71,6 +58,12 @@ export const authenticateToken = async (
  * but accessible in development
  */
 export const protectRoute = (req: Request, res: Response, next: NextFunction) => {
+  // Check for API key (read-only access)
+  const apiKey = req.headers['x-api-key'] as string
+  if (apiKey && apiKey === process.env.API_KEY) {
+    return next()
+  }
+
   // In production, always require authentication
   if (process.env.NODE_ENV === 'production') {
     return authenticateToken(req, res, next)

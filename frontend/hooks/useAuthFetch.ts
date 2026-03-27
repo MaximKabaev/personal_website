@@ -1,26 +1,22 @@
 'use client'
 
-import { createClient } from '@/lib/supabase'
-
 export function useAuthFetch() {
-  const getAuthHeaders = async (): Promise<HeadersInit> => {
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    
+  const getAuthHeaders = (): HeadersInit => {
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
     }
-    
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`
+
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
-    
+
     return headers
   }
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
-    const authHeaders = await getAuthHeaders()
-    
+    const authHeaders = getAuthHeaders()
+
     return fetch(url, {
       ...options,
       headers: {
