@@ -15,6 +15,7 @@ import MobileProjects from "./MobileProjects"
 import InlineMobileMenu from "./InlineMobileMenu"
 import AnimationTracker from "./AnimationTracker"
 import { RotateCcw, MoreHorizontal } from "lucide-react"
+import PromptMe from "./PromptMe"
 
 type Props = {
   projects: any[]
@@ -103,6 +104,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
               {isMobile && showMobileMenu ? (
                 <InlineMobileMenu
                   isDev={isDev}
+                  projects={projects}
                   onReset={resetPreference}
                   onClose={() => setShowMobileMenu(false)}
                 />
@@ -135,6 +137,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
                     </button>
                   ) : (
                     <div className="flex items-center gap-2">
+                      <PromptMe projects={projects} />
                       <ClientThemeToggle />
                       {isDev !== null && (
                         <button

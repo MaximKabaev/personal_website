@@ -2,14 +2,16 @@
 import React from "react"
 import { X, Sun, Moon } from "lucide-react"
 import { useTheme } from "@/contexts/ThemeContext"
+import PromptMe from "./PromptMe"
 
 type Props = {
   isDev: boolean | null
+  projects: any[]
   onReset: () => void
   onClose: () => void
 }
 
-export default function InlineMobileMenu({ isDev, onReset, onClose }: Props) {
+export default function InlineMobileMenu({ isDev, projects, onReset, onClose }: Props) {
   const { resolvedTheme, setTheme, theme } = useTheme()
 
   const toggleTheme = () => {
@@ -42,6 +44,9 @@ export default function InlineMobileMenu({ isDev, onReset, onClose }: Props) {
             </>
           )}
         </button>
+
+        {/* Prompt Me */}
+        <PromptMe projects={projects} variant="mobile" />
 
         {/* Mode Selection */}
         {isDev !== null && (
