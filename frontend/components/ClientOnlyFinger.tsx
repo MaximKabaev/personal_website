@@ -6,7 +6,7 @@ export default function ClientOnlyFinger() {
   return (
   <TerminalReveal command="finger maxim" typingSpeed={60} pauseAfter={500} sequential>
       <div>
-        <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. always open to discuss anything.</p>
+        <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. you can also reach me at mkabaevuk@gmail.com. always open to discuss anything.</p>
       </div>
     </TerminalReveal>
   )

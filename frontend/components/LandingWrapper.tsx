@@ -7,14 +7,10 @@ import ClientOnlyWhoami from "./ClientOnlyWhoami"
 import ClientOnlyFinger from "./ClientOnlyFinger"
 import DevTerminalSection from "./DevTerminalSection"
 import { TerminalSequenceProvider } from "./TerminalSequence"
-import Link from "next/link"
-import WindowsFolder from "./WindowsFolder"
-import WindowsExplorer from "./WindowsExplorer"
-import WindowsDesktop from "./WindowsDesktop"
-import MobileProjects from "./MobileProjects"
 import InlineMobileMenu from "./InlineMobileMenu"
 import AnimationTracker from "./AnimationTracker"
-import { RotateCcw, MoreHorizontal } from "lucide-react"
+import ModernView from "./ModernView"
+import { MoreHorizontal } from "lucide-react"
 import PromptMe from "./PromptMe"
 
 type Props = {
@@ -26,8 +22,6 @@ export default function LandingWrapper({ projects, folders }: Props) {
   const [isDev, setIsDev] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [skipAnimation, setSkipAnimation] = useState(false)
-  const [showReloadButton, setShowReloadButton] = useState(false)
-  const [reloadFunction, setReloadFunction] = useState<(() => void) | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
@@ -76,17 +70,6 @@ export default function LandingWrapper({ projects, folders }: Props) {
     setIsDev(null)
   }
 
-  const handleReloadStateChange = (showReload: boolean, reloadFn: () => void) => {
-    setShowReloadButton(showReload)
-    setReloadFunction(() => reloadFn)
-  }
-
-  const handleReloadClick = () => {
-    if (reloadFunction) {
-      reloadFunction()
-    }
-  }
-
   return (
     <div
       className="min-h-screen bg-background text-foreground font-mono"
@@ -94,7 +77,11 @@ export default function LandingWrapper({ projects, folders }: Props) {
     >
       {/* Header with cover image - always shown */}
       <div className="container mx-auto px-6 max-w-4xl">
-        <div className="relative overflow-hidden rounded-lg mt-8">
+        <div className="relative mt-8">
+          {isDev === false && (
+            <div className="absolute -inset-[1px] rounded-[10px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 animate-[gradient-x_4s_ease_infinite] bg-[length:200%_auto]" />
+          )}
+          <div className="relative overflow-hidden rounded-lg">
           <div
             className="absolute inset-0 bg-cover bg-[url('/landing-cover.jpg')] dark:bg-[url('/landing-cover-dark.jpg')] dark:[--bg-pos:center_22%]"
             style={{ backgroundPosition: 'var(--bg-pos)' }}
@@ -125,6 +112,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
                       <p className="text-slate-300 text-sm -mt-0.5">
                         {isDev !== false ? "software & aerospace engineer" : "Software & Aerospace Engineer"}
                       </p>
+                      {!isMobile && <PromptMe projects={projects} />}
                     </div>
                   </div>
                   {isMobile ? (
@@ -137,7 +125,6 @@ export default function LandingWrapper({ projects, folders }: Props) {
                     </button>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <PromptMe projects={projects} />
                       <ClientThemeToggle />
                       {isDev !== null && (
                         <button
@@ -153,6 +140,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
                 </>
               )}
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -182,7 +170,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
                   hi. im maxim, an aerospace engineering student at the university of bath with a strong
                   background in software development (mostly self-taught). i’m passionate about building
                   things, constantly exploring new ideas, and driven by the belief that with enough
-                  experiments, after enough startups fails, at least one will succeed — it’s simple statistics, you just gotta keep trying.
+                  experiments, after enough fails, at least one will succeed — it’s simple statistics, you just gotta keep trying.
                 </p>
               </section>
 
@@ -205,7 +193,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
                   </span>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. always open to discuss anything.</p>
+                  <p className="text-muted-foreground">my dms are open on X/Twitter at @MaximKabaev21. you can also reach me at mkabaevuk@gmail.com. always open to discuss anything.</p>
                 </div>
               </section>
             </>
@@ -225,52 +213,8 @@ export default function LandingWrapper({ projects, folders }: Props) {
             </TerminalSequenceProvider>
           )
         ) : (
-          // Show normal style content
-          <>
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-4">About Me</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Hi! I'm Maxim, a developer who enjoys building interesting projects and sharing the journey. 
-                This is my devlog where I document progress, thoughts, and learnings from various projects. 
-                Each entry includes timestamps and personal reflections on the development process.
-              </p>
-            </section>
-
-            <section className="mb-12">
-              <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-2xl font-bold">Projects</h2>
-                {showReloadButton && !isMobile && (
-                  <button
-                    onClick={handleReloadClick}
-                    className="p-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors"
-                    title="Reset Explorer"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              {isMobile ? (
-                <MobileProjects 
-                  projects={projects} 
-                  folders={folders} 
-                />
-              ) : (
-                <WindowsDesktop 
-                  projects={projects} 
-                  folders={folders} 
-                  onReloadStateChange={handleReloadStateChange}
-                />
-              )}
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Contact</h2>
-              <p className="text-muted-foreground">
-                My DMs are open on X/Twitter at <a href="https://twitter.com/MaximKabaev21" className="text-primary hover:underline">@MaximKabaev21</a>
-              </p>
-              <p className="text-muted-foreground mt-2">Always open to discuss anything!</p>
-            </section>
-          </>
+          // Show modern animated content
+          <ModernView projects={projects} folders={folders} />
         )}
       </div>
     </div>
