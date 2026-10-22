@@ -209,7 +209,10 @@ export default function ModernView({ projects, folders }: Props) {
           <h2 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
             <span className="text-muted-foreground">Building things</span>
             <br />
-            <span className="text-foreground">that matter.</span>
+            <span className="text-foreground">
+              that matter.
+              <span aria-hidden className="ml-1.5 inline-block w-[0.1em] h-[0.9em] translate-y-[0.1em] bg-foreground animate-cursor-pulse" />
+            </span>
           </h2>
         </div>
         <div
@@ -267,6 +270,16 @@ export default function ModernView({ projects, folders }: Props) {
 
       {/* Contact */}
       <ContactSection />
+
+      <style jsx>{`
+        @keyframes cursor-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.15; }
+        }
+        .animate-cursor-pulse {
+          animation: cursor-pulse 1.2s ease-in-out infinite;
+        }
+      `}</style>
 
     </div>
   )
