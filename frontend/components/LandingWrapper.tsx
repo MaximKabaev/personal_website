@@ -78,9 +78,6 @@ export default function LandingWrapper({ projects, folders }: Props) {
       {/* Header with cover image - always shown */}
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="relative mt-8">
-          {isDev === false && (
-            <div className="absolute -inset-[1px] rounded-[10px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 animate-[gradient-x_4s_ease_infinite] bg-[length:200%_auto]" />
-          )}
           <div className="relative overflow-hidden rounded-lg">
           <div
             className="absolute inset-0 bg-cover bg-[url('/landing-cover.jpg')] dark:bg-[url('/landing-cover-dark.jpg')] dark:[--bg-pos:center_22%]"
