@@ -209,10 +209,7 @@ export default function ModernView({ projects, folders }: Props) {
           <h2 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
             <span className="text-muted-foreground">Building things</span>
             <br />
-            <span className="text-foreground">
-              that matter.
-              <span aria-hidden className="ml-2 inline-block w-[0.55em] h-[0.85em] translate-y-[0.08em] bg-foreground animate-cursor-blink" />
-            </span>
+            <span className="text-foreground">that matter.</span>
           </h2>
         </div>
         <div
@@ -271,15 +268,6 @@ export default function ModernView({ projects, folders }: Props) {
       {/* Contact */}
       <ContactSection />
 
-      <style jsx>{`
-        @keyframes cursor-blink {
-          0%, 50% { opacity: 1; }
-          50.01%, 100% { opacity: 0; }
-        }
-        .animate-cursor-blink {
-          animation: cursor-blink 1.1s infinite;
-        }
-      `}</style>
     </div>
   )
 }
