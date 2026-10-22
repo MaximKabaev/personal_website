@@ -72,7 +72,7 @@ export default function LandingWrapper({ projects, folders }: Props) {
 
   return (
     <div
-      className="min-h-screen bg-background text-foreground font-mono"
+      className="min-h-screen overflow-x-clip bg-background text-foreground font-mono"
       style={{ ['--bg-pos' as string]: 'center 50%' }}
     >
       {/* Header with cover image - always shown */}

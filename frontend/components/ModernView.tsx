@@ -211,7 +211,7 @@ export default function ModernView({ projects, folders }: Props) {
   return (
     <div className="relative">
       {/* Floating gradient orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
         <div
           className="absolute w-[500px] h-[500px] rounded-full opacity-[0.03] dark:opacity-[0.06] blur-[100px]"
           style={{
